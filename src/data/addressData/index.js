@@ -1,0 +1,85 @@
+import {
+  addressOne,
+  addressTwo,
+  defaults,
+  homeAddress,
+  makeasadefault,
+  phoneNoOne,
+  phoneNoText,
+} from '../../constant';
+
+export const addressData = [
+  {
+    id: 0,
+    title: 'transData.homeAddress',
+    subtitle: 'transData.defaults',
+    address: 'transData.addressOne',
+    phoneNumber: phoneNoOne,
+    mo: phoneNoText,
+    defaulText: 'transData.makeasadefault',
+  },
+  {
+    id: 1,
+    title: 'transData.homeAddress',
+    address: 'transData.addressTwo',
+    phoneNumber: phoneNoOne,
+    mo: phoneNoText,
+    defaulText: 'transData.makeasadefault',
+  },
+];
+
+export const indianStatesData = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Delhi",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jammu and Kashmir",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Lakshadweep Islands",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Pondicherry",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Chandigarh",
+  "Daman and Diu",
+  "Other Territory"
+];
+
+export const changeAddressData = [
+  {
+    id: 0,
+    title: 'transData.homeAddress',
+    subtitle: 'transData.defaults',
+    address: addressOne,
+    phoneNumber: phoneNoOne,
+    mo: phoneNoText,
+  },
+  {
+    id: 1,
+    title: 'transData.homeAddress',
+    address: 'transData.addressTwo',
+    phoneNumber: phoneNoOne,
+    mo: phoneNoText,
+  },
+];
