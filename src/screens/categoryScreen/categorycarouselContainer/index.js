@@ -6,6 +6,7 @@ import IMAGE_CONFIG from '../../../config/imageConfig';
 import { useNavigation } from '@react-navigation/native';
 const { width: screenWidth } = Dimensions.get('window');
 import FixedSvgFromUrl from '../../../commonComponents/customSvgImage/customSvgImage';
+import { external } from '../../../style/external.css';
 
 
 const CategoryCarouselContainer = (data) => {
@@ -15,28 +16,37 @@ const CategoryCarouselContainer = (data) => {
   const CarouselItem = ({ item, navigation }) => {
   const [imgError, setImgError] = useState(false);
 
+	const getLastSegment = (url) => {
+		if (!url) return "";
+		return url.replace(/\/+$/, "").split('/').pop();
+	};
+
+
   return (
-    <View style={styles.slide}>
+    <View style={[styles.slide]}>
       <Pressable
-        onPress={() =>
-          item.filterCode &&
+        onPress={async () =>
+        {
+           const lastSegment = await getLastSegment(item.bannerURL); 
+          item.bannerURL &&
           navigation.navigate("ProductListing", {
             item: {
-              title: item.filterCode,
+              title: lastSegment,
               url: "",
-              parentCat: item.filterCode,
+              parentCat: lastSegment,
               filterKey: "",
-              categoryName: item.filterValue,
+              categoryName: item.shortDescr,
               filterTitle: '' 
             },
-          })
+          });
+        }
         }
       >
-        {item.filterImagePath?.endsWith(".svg") ? (
+        {item.imagePath?.endsWith(".svg") ? (
           <FixedSvgFromUrl
             width={"100%"}
             height={"100%"}
-            uri={`${IMAGE_CONFIG.BASE_URL}/${item.filterImagePath}`}
+            uri={`${IMAGE_CONFIG.BASE_URL}/${item.imagePath}`}
           />
         ) : (
           <Image
@@ -44,10 +54,10 @@ const CategoryCarouselContainer = (data) => {
             style={styles.imageBackground}
             source={
               imgError ||
-              !item.filterImagePath ||
-              item.filterImagePath === "noimage.jpg"
+              !item.imagePath ||
+              item.imagePath === "noimage.jpg"
                 ? require("../../../assets/images/homeScreenOne/placeholder.jpeg")
-                : { uri: `${IMAGE_CONFIG.BASE_URL}/${item.filterImagePath}` }
+                : { uri: `${IMAGE_CONFIG.BASE_URL}/${item.imagePath}` }
             }
             onError={() => setImgError(true)}
           />
@@ -61,8 +71,9 @@ const renderItem = ({ item }) => {
 };
 
   return (
-    <>
-      <Carousel
+    <View style={[(data.data.length === 0 || !data.data) && external.mb_10,{ flex: 1}]}>
+      <Carousel 
+       
         data={data.data}
         renderItem={renderItem}
         sliderWidth={screenWidth}
@@ -76,7 +87,7 @@ const renderItem = ({ item }) => {
       />
       
 
-    </>
+    </View>
 
   );
 };

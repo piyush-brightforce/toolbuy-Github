@@ -10,8 +10,7 @@ import { useValues } from '../../../../../App';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
-import API_URL from '../../../../config/apiConfig';
-import LoaderScreen from '../../../loaderScreen';
+import API_URL from '../../../../config/apiConfig'; 
 import IMAGE_CONFIG from '../../../../config/imageConfig';
 import appFonts from '../../../../themes/appFonts';
 
@@ -31,8 +30,7 @@ import { getValue, PREFERENCE_KEY } from '../../../../utils/helper/localStorage'
 const OrderHistoryDetailsScreen = ({ route }) => {
 
   const { orderId, orderNumber, intOrderID } = route?.params || {};
-  const navigation = useNavigation();
-  const [pageLoading, setPageLoading] = useState(true);
+  const navigation = useNavigation(); 
 
   const [selectedOrderSummaryExpanded, setSelectedOrderSummaryExpanded] = useState(false);
 
@@ -51,7 +49,9 @@ const OrderHistoryDetailsScreen = ({ route }) => {
     linearColorStyleTwo,
     currency,
     t,
-    curreLocale
+    curreLocale,
+    isLoaderLoading,
+    setIsLoaderLoading,
   } = useValues();
 
 
@@ -90,10 +90,13 @@ const OrderHistoryDetailsScreen = ({ route }) => {
 
 
   useEffect(() => {
+    setIsLoaderLoading(true);
     const initialize = async () => { 
       if (orderId) {
         const encodedOrderid = encodeOrderId(orderId); 
         await fetchOrdeDetails(encodedOrderid);
+      }else{
+        setIsLoaderLoading(false);
       }
     };
 
@@ -155,13 +158,13 @@ const OrderHistoryDetailsScreen = ({ route }) => {
       setOrderHistoryDetails(result?.orderMaster);
       setCartList(result?.orderDetails);
       await fetchInvoiceList();
-      setPageLoading(false);
+      setIsLoaderLoading(false);
 
     } catch (error) {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
       console.error("Error fetching data:", error);
     } finally {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -335,7 +338,7 @@ const OrderHistoryDetailsScreen = ({ route }) => {
 
   const orderSummaryItem = ({ item }) => (
     <View>
-      <TouchableOpacity style={[commonStyles.commonContainer, external.m_5, { backgroundColor: 'white' }, external.mt_10]}  >
+      <TouchableOpacity style={[commonStyles.commonContainer, external.m_5, { backgroundColor:appColors.textColorWhite }, external.mt_10]}  >
         <View style={styles.summaryOrderContainer}>
           {item.ProductImagePath?.endsWith('.svg') ? (
             <FixedSvgFromUrl
@@ -362,11 +365,7 @@ const OrderHistoryDetailsScreen = ({ route }) => {
   return (
     <View
       style={[commonStyles.commonContainer, { backgroundColor: appColors.bgLayout }]}>
-      {pageLoading && (
-        <Modal transparent visible={pageLoading}>
-          <LoaderScreen />
-        </Modal>
-      )}
+      
       <ProductHeaderContainer title={"Order Details"} type={'title'} righticon={false} onPress={() => navigation.goBack()} />
 
 
@@ -663,7 +662,7 @@ const OrderHistoryDetailsScreen = ({ route }) => {
                       justifyContent: 'center',
                       alignItems: 'center'
                     }}>
-                      <Text style={{ color: 'white', fontSize: 12 }}>3</Text>
+                      <Text style={{ color: appColors.textColorWhite, fontSize: 12 }}>3</Text>
                     </View>
                   </View>
                   <Text

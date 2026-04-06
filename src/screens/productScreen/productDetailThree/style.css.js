@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: 'white',
+    color: appColors.textColorWhite,
   },
   text: {
     margin: 6,

@@ -10,56 +10,71 @@ import { useNavigation } from '@react-navigation/native';
 import { commonStyles } from '../../style/commonStyle.css';
 import TopDepartmentContainer from '../../components/homeScreen/topDepartmentContainer';
 import TopDealOfTheMonthContainer from '../../components/homeScreen/topDealsOftheMonth';
-import CarouselContainer from '../../components/homeScreenTwo/carouselContainer'; 
+import CarouselContainer from '../../components/homeScreenTwo/carouselContainer';
 import appColors from '../../themes/appColors';
 import { getValue, PREFERENCE_KEY } from '../../utils/helper/localStorage';
 import API_URL from '../../config/apiConfig';
 import { ShoppingCartResponse } from '../../models/cart/cartmodel';
 import axios from 'axios';
- 
+import BestBrandUnderRoof from '../../components/homeScreen/bestBrandsContainer';
+import Brand from '../../models/brandmodel';
+
 
 const HomeScreen = () => {
 	const navigation = useNavigation();
 
 	const [search, setSearch] = useState('');
-	const {settotalCartItem} = useValues();
-	
+	const { settotalCartItem, setAllBrandsData } = useValues();
+
 	useEffect(() => {
-
-
-		const fetchCartData = async () => {
-			try {
-
-				// ✅ wait for async value
-				const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
-				const cartid = await getValue(PREFERENCE_KEY.CARTSESSIONID);
-
-				const customerUserID = Number(id); 
-
-				const response = await axios.post(API_URL.GETSHOPPINGCART, {
-					CustomerID: customerUserID,
-					CartSessionID: (!customerUserID || customerUserID === 0) ? cartid ?? "" : "",
-				}); 
-				const cartListModelData = new ShoppingCartResponse(response.data);
-				if (cartListModelData.success) {
-					settotalCartItem(cartListModelData.shoppingCartMaster.totalItems ?? 0);
-				}
-			} catch (error) {
-				console.error('Error fetching data:', error);
-			}
-		};
-
+		fetchBrandData();
 		fetchCartData();
+	}, []);
 
-	});
+	const fetchCartData = async () => {
+		try {
+
+			// ✅ wait for async value
+			const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
+			const cartid = await getValue(PREFERENCE_KEY.CARTSESSIONID);
+
+			const customerUserID = Number(id);
+
+			const response = await axios.post(API_URL.GETSHOPPINGCART, {
+				CustomerID: customerUserID,
+				CartSessionID: (!customerUserID || customerUserID === 0) ? cartid ?? "" : "",
+			});
+			const cartListModelData = new ShoppingCartResponse(response.data);
+			if (cartListModelData.success) {
+				settotalCartItem(cartListModelData.shoppingCartMaster.totalItems ?? 0);
+			}
+		} catch (error) {
+			console.error('Error fetching data:', error);
+		}
+	};
+
+	const fetchBrandData = async () => {
+		try {
+			const response = await axios.get(API_URL.GETALLBRANDS);
+
+			const apiData = response.data.Result.BrandList
+				.flat()
+				.map(item => new Brand(item));
+
+			setAllBrandsData(apiData);
+
+		} catch (error) {
+			console.error('Error fetching brands:', error);
+		}
+	};
 
 	return (
-		<View style={{backgroundColor: appColors.textColorWhite}}>
+		<View style={{ backgroundColor: appColors.textColorWhite }}>
 
 			<View style={commonStyles.Header}>
 				<HeaderContainer onPress={() => navigation.openDrawer()} />
 				<SearchContainer show={true} onSendData={(value) => {
-					setSearch(value); 
+					setSearch(value);
 				}} />
 			</View>
 			{search === "" && <ScrollView
@@ -69,9 +84,8 @@ const HomeScreen = () => {
 
 				<CarouselContainer />
 				<TopDealOfTheMonthContainer />
-				{/* <ProductSwiper onSendData={(value) => setSelectedItem(value)} /> */}
-				{/* <ConditionalItems /> */}
 				<TopDepartmentContainer />
+				<BestBrandUnderRoof />
 			</ScrollView>}
 
 		</View>

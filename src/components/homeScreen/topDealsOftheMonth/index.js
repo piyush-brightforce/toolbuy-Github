@@ -67,7 +67,7 @@ const TopDealOfTheMonthContainer = () => {
   return (
     	<TouchableOpacity
 			activeOpacity={0.9}
-			style={[styles.container, { backgroundColor: 'white' }]}
+			style={[styles.container, { backgroundColor: appColors.textColorWhite }]}
       onPress={() => handleOnProductDetails(product) }
 		>
 			<View style={styles.imageContainer}>

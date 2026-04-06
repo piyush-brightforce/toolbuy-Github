@@ -17,11 +17,10 @@ import NavigationButton from '../../../commonComponents/navigationButton';
 import { useValues } from '../../../../App';
 import LinearGradient from 'react-native-linear-gradient';
 import TextInputs from '../../../commonComponents/textInputs';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { getValue, PREFERENCE_KEY } from '../../../utils/helper/localStorage';
 import axios from 'axios';
 import API_URL from '../../../config/apiConfig';
-import LoaderScreen from '../../loaderScreen';
 import { AddressResponse } from '../../../models/addressmodel/addressmodel';
 import LoginResponseModel from '../../../models/login/loginresponsemodel';
 
@@ -46,7 +45,6 @@ const AddressScreen = ({ route }) => {
   const navigation = useNavigation();
   const [userResponse, setUserResponse] = useState(null);
   const [addressListResponse, setaddressListResponse] = useState([]);
-  const [pageLoading, setPageLoading] = useState(true);
   const [selectedDeliveryAsB, setselectedDeliveryAsB] = useState(true);
   const [selectedBuyingCompany, setSelectedBuyingCompany] = useState(false);
 
@@ -135,7 +133,8 @@ const AddressScreen = ({ route }) => {
     currency,
     curreLocale,
     textContainer,
-    t
+    t, isLoaderLoading,
+    setIsLoaderLoading,
   } = useValues();
 
   const paymentMethodIcons = [
@@ -173,17 +172,18 @@ const AddressScreen = ({ route }) => {
     setSelectedOrderSummaryExpanded(true);
   };
 
+  //  React to changes
   useEffect(() => {
-    getUserResponse();
-    fetchAddressList();
+    setIsLoaderLoading(true);
+    const initialize = async () => {
+      getUserResponse();
+      fetchAddressList();
+    };
+
+    initialize();
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      getUserResponse();
-      fetchAddressList();// reload API or state
-    }, [])
-  );
+
 
   const openSheet = () => {
     setVisible(true);
@@ -221,7 +221,7 @@ const AddressScreen = ({ route }) => {
 
 
       if (!token) {
-        setPageLoading(false);
+        setIsLoaderLoading(false);
         return;
       }
       const response = await axios.post(API_URL.GETADDRESSLIST, {
@@ -231,13 +231,13 @@ const AddressScreen = ({ route }) => {
       const result = cartListModelData.result ?? [];
 
       setaddressListResponse(result);
-      setPageLoading(false);
+      setIsLoaderLoading(false);
 
     } catch (error) {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
       console.error("Error fetching data:", error);
     } finally {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -439,13 +439,13 @@ const AddressScreen = ({ route }) => {
   const chooseAddressApiCall = async (adressid, type) => {
     try {
 
-      setPageLoading(true);
+      setIsLoaderLoading(true);
       // ✅ wait for async value
       const token = await getValue(PREFERENCE_KEY.USERTOKEN);
 
 
       if (!token) {
-        setPageLoading(false);
+        setIsLoaderLoading(false);
         return;
       }
       const response = await axios.post(type === "Choose Billing Address" ? API_URL.SETPRIMARYADDRESS : API_URL.SETDELIVERYADDRESS, {
@@ -457,14 +457,14 @@ const AddressScreen = ({ route }) => {
         await fetchAddressList();
       } else {
         handleSelectAddressItem({});
-        setPageLoading(false);
+        setIsLoaderLoading(false);
       }
 
     } catch (error) {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
       console.error("Error fetching data:", error);
     } finally {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -526,7 +526,7 @@ const AddressScreen = ({ route }) => {
 
   const orderSummaryItem = ({ item }) => (
     <View>
-      <TouchableOpacity style={[commonStyles.commonContainer, external.m_5, { backgroundColor: 'white' }, external.mt_10]}  >
+      <TouchableOpacity style={[commonStyles.commonContainer, external.m_5, { backgroundColor: appColors.textColorWhite }, external.mt_10]}  >
         <View style={styles.summaryOrderContainer}>
           {item.productImagePath?.endsWith('.svg') ? (
             <FixedSvgFromUrl
@@ -666,7 +666,7 @@ const AddressScreen = ({ route }) => {
 
     try {
 
-      setPageLoading(true);
+      setIsLoaderLoading(true);
       // ✅ wait for async value
       const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
       const customerId = Number(id);
@@ -725,14 +725,14 @@ const AddressScreen = ({ route }) => {
           text2: response?.data?.Message,
         });
       } else {
-        setPageLoading(false);
+        setIsLoaderLoading(false);
       }
 
     } catch (error) {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
       console.error("Error fetching data:", error);
     } finally {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -786,7 +786,7 @@ const AddressScreen = ({ route }) => {
   const editAddressApiCall = async (item) => {
     try {
 
-      setPageLoading(true);
+      setIsLoaderLoading(true);
       // ✅ wait for async value 
 
 
@@ -820,14 +820,14 @@ const AddressScreen = ({ route }) => {
           text2: response?.data?.Message
         });
       } else {
-        setPageLoading(false);
+        setIsLoaderLoading(false);
       }
 
     } catch (error) {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
       console.error("Error fetching data:", error);
     } finally {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -877,14 +877,16 @@ const AddressScreen = ({ route }) => {
         }
       } else {
         setPlaceOrderLoading(false);
-        setPageLoading(false);
+        setIsLoaderLoading(false);
       }
 
     } catch (error) {
       setPlaceOrderLoading(false);
+      setIsLoaderLoading(false);
       console.error("Error makepaymentrazorpay fetching data:", error);
     } finally {
       setPlaceOrderLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -920,16 +922,16 @@ const AddressScreen = ({ route }) => {
 
       } else {
         setPlaceOrderLoading(false);
-        setPageLoading(false);
+        setIsLoaderLoading(false);
       }
 
     } catch (error) {
       setPlaceOrderLoading(false);
-      setPageLoading(false);
+      setIsLoaderLoading(false);
       console.error("Error makepaymentrazorpay fetching data:", error);
     } finally {
       setPlaceOrderLoading(false);
-      setPageLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -970,7 +972,7 @@ const AddressScreen = ({ route }) => {
       })
       .catch((error) => {
         setPlaceOrderLoading(false);
-        setPageLoading(false);
+        setIsLoaderLoading(false);
         console.error('Error:', error);
       });
   };
@@ -979,11 +981,7 @@ const AddressScreen = ({ route }) => {
   return (
     <View
       style={[commonStyles.commonContainer, { backgroundColor: appColors.bgLayout }]}>
-      {pageLoading && (
-        <Modal transparent visible={pageLoading}>
-          <LoaderScreen />
-        </Modal>
-      )}
+
       <AddressHeaderContainer title='Checkout' type='title' righticon={true} onPress={() => navigation.goBack()} />
       <View
         style={[
@@ -1069,7 +1067,7 @@ const AddressScreen = ({ route }) => {
                           justifyContent: 'center',
                           alignItems: 'center'
                         }}>
-                          <Text style={{ color: 'white', fontSize: 12 }}>2</Text>
+                          <Text style={{ color: appColors.textColorWhite, fontSize: 12 }}>2</Text>
                         </View>
                       </View>
                       <Text
@@ -1547,7 +1545,7 @@ const AddressScreen = ({ route }) => {
                       justifyContent: 'center',
                       alignItems: 'center'
                     }}>
-                      <Text style={{ color: 'white', fontSize: 12 }}>3</Text>
+                      <Text style={{ color: appColors.textColorWhite, fontSize: 12 }}>3</Text>
                     </View>
                   </View>
                   <Text
@@ -1614,7 +1612,7 @@ const AddressScreen = ({ route }) => {
                       justifyContent: 'center',
                       alignItems: 'center'
                     }}>
-                      <Text style={{ color: 'white', fontSize: 12 }}>4</Text>
+                      <Text style={{ color: appColors.textColorWhite, fontSize: 12 }}>4</Text>
                     </View>
                   </View>
                   <Text

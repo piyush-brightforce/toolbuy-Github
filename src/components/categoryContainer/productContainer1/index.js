@@ -24,7 +24,7 @@ const ProductContainer1 = () => {
 
 
 	useEffect(() => {
-		const newObj = { title: caregotyCode, url: "", parentCat: caregotyCode, filterKey: "category" };
+		const newObj = { title:  caregotyCode, url: "", parentCat:  caregotyCode, filterKey: "category",categoryName:  caregotyTitle,filterTitle:'' };
 		setSelectionArrayList([newObj]);
 	}, []);
 
@@ -35,13 +35,14 @@ const ProductContainer1 = () => {
 		setCaregotyTitle(title);
 		setcaregotyCode(categoryCode); 
 		const newObj = { title: categoryCode ?? caregotyCode, url: "", parentCat: categoryCode ?? caregotyCode, filterKey: "category",categoryName: title ?? caregotyTitle,filterTitle:'' };
-
+		 
 		setSelectionArrayList([newObj]);
 
 	}
 
 	const onPressHandleShop = () => {
 		const lastObject = selectionArrayList?.length > 0 ? selectionArrayList[0] : {};
+		 
 		lastObject && navigation.navigate("ProductListing", {
 			item: lastObject
 		});

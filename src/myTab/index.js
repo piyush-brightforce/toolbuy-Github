@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import HomeScreen from '../screens/homeScreen';
-import CategoryScreen from '../screens/categoryScreen';
-import ProfileScreen from '../screens/profileScreen';
+import CategoryScreen from '../screens/categoryScreen'; 
+
 import {
 	HomeIconG,
 	CategoryIconG,

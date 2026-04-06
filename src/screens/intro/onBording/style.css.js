@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bottomContainer: {
-    backgroundColor: 'white',
+    backgroundColor:appColors.textColorWhite,
     height: 280,
     width: '100%',
     elevation: 2,

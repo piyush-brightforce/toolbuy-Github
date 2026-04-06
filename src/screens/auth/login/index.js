@@ -18,6 +18,8 @@ import { getValue, PREFERENCE_KEY, setValue } from '../../../utils/helper/localS
 import { useNavigation } from '@react-navigation/native';
 import AuthHeaderContainer from '../authHeaderContainer'; 
 import Toast from 'react-native-toast-message';
+import { VisibilityIconG } from '../../../assets/googleIcons/VisibilityIcongG';
+import { VisibilityOffIconG } from '../../../assets/googleIcons/VisibilityOff';
 const SignIn = ({ }) => {
 
   const { setCustomerUseID } = useValues();
@@ -33,14 +35,9 @@ const SignIn = ({ }) => {
   const [isLoading, setLoading] = useState(false);
 
   const navigation = useNavigation();
-
-  const [visible, setVisible] = useState(false);
-
-  const openSheet = (link) => {
-    setUrl(link);
-    setVisible(true);
-  };
-
+ 
+  const [secure, setSecure] = useState(true);
+ 
 
   const loginApiCall = async () => {
     try {
@@ -170,7 +167,8 @@ const SignIn = ({ }) => {
               {emailError !== '' && (
                 <Text style={styles.errorStyle}>{emailError}</Text>
               )}
-              <TextInputs
+              <TextInputs 
+              
                 value={password}
                 title={t('transData.passwords')}
                 placeHolder={t('transData.enterYouPassword')}
@@ -187,6 +185,14 @@ const SignIn = ({ }) => {
                   validatePassword();
                   setPwdTyping(false);
                 }} 
+                show={true}
+                secureEntryValue={secure}
+                rightIcon={<TouchableOpacity
+        style={styles.icon}
+       onPress={() => setSecure(!secure)}
+      >
+        {secure ? <VisibilityIconG />: <VisibilityOffIconG /> }
+      </TouchableOpacity> }
               />
               {passwordError !== '' && (
                 <Text style={styles.errorStyle}>{passwordError}</Text>

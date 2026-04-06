@@ -71,12 +71,12 @@ const SearchingScreen = ({ route }) => {
     };
 
     return (
-        <View style={{ backgroundColor: 'white', flex: 1 }}>
+        <View style={{ backgroundColor: appColors.textColorWhite, flex: 1 }}>
 
             <View style={commonStyles.Header}>
                 <View style={[styles.container]}>
                     <View style={[external.fd_row, external.ai_center]}>
-                        {isFrom && <IconBackground value={<ChevronLeft height={28} width={28} color={"white"} />} onPress={() => navigation.goBack('')} />}
+                        {isFrom && <IconBackground value={<ChevronLeft height={28} width={28} color={appColors.textColorWhite} />} onPress={() => navigation.goBack('')} />}
                         <View style={[styles.menuItemContent, { marginLeft: isFrom ? 0 : windowHeight(16) }]}>
 
 
@@ -114,7 +114,7 @@ const SearchingScreen = ({ route }) => {
             </View>
 
             <ScrollView contentContainerStyle={[external.Pb_80]}
-                style={[{ backgroundColor: 'white' }]}
+                style={[{ backgroundColor: appColors.textColorWhite }]}
                 showsVerticalScrollIndicator={false}>
                 {searchingResult && searchText !== "" && <SearchingListingContainer data={searchingResult} />}
             </ScrollView>

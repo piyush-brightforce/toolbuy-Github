@@ -9,7 +9,7 @@ import { commonStyles } from '../../../style/commonStyle.css';
 import { useValues } from '../../../../App';
 import ProductHeaderContainer from '../productHeaderContainer';
 import FilterBar from '../ProductFilter';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import ProductCard from '../../../commonComponents/productCard';
 import styles from './style.css';
 import axios from 'axios';
@@ -24,14 +24,22 @@ import DropdownSection from './dropDown/dropdown';
 import PriceDropdown from './dropDown/priceRange';
 import MultiSelectDropdown from './dropDown/multiselectiondropdown';
 import { getValue, PREFERENCE_KEY, setValue } from '../../../utils/helper/localStorage';
-import LoaderScreen from '../../loaderScreen';
 import CartResponse from '../../../models/cart/cartresponse';
 import { ShoppingCartResponse } from '../../../models/cart/cartmodel';
+
+const toArray = (val) => {
+	if (Array.isArray(val)) return val;
+	if (val) return [val];
+	return [];
+};
+
 const ProductListing = ({ route }) => {
 
 	const navigation = useNavigation();
 	const { item, isfrom = "" } = route.params ?? {};
-	const { bgFullStyle, textColorStyle, settotalCartItem,t } = useValues();
+	const { bgFullStyle, textColorStyle, settotalCartItem, t,
+		isLoaderLoading,
+		setIsLoaderLoading, } = useValues();
 	const [categoryProductList, setcategoryProductList] = useState();
 	const [filterCategoryProductList, setfilterCategoryProductList] = useState();
 	const [responsePriceRange, setresponsePriceRange] = useState();
@@ -40,7 +48,6 @@ const ProductListing = ({ route }) => {
 	const [filterValue, setfilterValue] = useState('');
 	const [selectedFilter, setSelectedFilter] = useState({});
 	const [newArrayList, setNewArrayList] = useState([]);
-	const [isLoading, setLoadingValue] = useState(true);
 	const [lastShopAllValue, setLastShopAllValue] = useState('');
 	const [pageNo, setPageNo] = useState(1);
 	const [listloading, setlistloading] = useState(false);
@@ -78,37 +85,37 @@ const ProductListing = ({ route }) => {
 		await fetchProductListingData({ best: isBestValueSelected, price: priceFilter, pageindex: nextPage });
 	};
 
-
-		//  React to changes
+	//  React to changes
 	useEffect(() => {
+		setIsLoaderLoading(true);
 		const initialize = async () => {
-				if (item) {
+			if (item) {
+				const initialArray = [
+					{
+						category: item.title,
+						parentCategoery: item.parentCat,
+						filterValue: item.url,
+						filterKey: item.filterKey ? item.filterKey : 'category',
+						categoryName: item.categoryName,
+						filterTitle: item.filterTitle
+					}
+				]; 
+				await fetchProductListingData({
+					best: isBestValueSelected, price: priceFilter, pageindex: pageNo,
+					customArray: initialArray
+				});
 
-					const initialArray = [
-						{
-							category: item.title,
-							parentCategoery: item.parentCat,
-							filterValue: item.url,
-							filterKey: item.filterKey ? item.filterKey : 'category',
-							categoryName: item.categoryName,
-							filterTitle: item.filterTitle
-						}
-					];
-					// Call API directly
-					await fetchProductListingData({
-						best: isBestValueSelected, price: priceFilter, pageindex: pageNo,
-						customArray: initialArray
-					});
+				setNewArrayList(initialArray);
 
-					setNewArrayList(initialArray);
+			} else {
+				setIsLoaderLoading(false);
+			}
+		};
 
-				}
-			};
-
-			initialize();
+		initialize();
 	}, [item]);
 
- 
+
 
 	const fetchProductListingData = async ({ best, price, pageindex, customArray }) => {
 
@@ -119,11 +126,14 @@ const ProductListing = ({ route }) => {
 
 			const lastValue = sourceArray?.length > 0
 				? sourceArray[sourceArray.length - 1]
-				: null; 
-			const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID); 
+				: null;
+			const [id, cartid] = await Promise.all([
+				getValue(PREFERENCE_KEY.USERCUSTOMERID),
+				getValue(PREFERENCE_KEY.CARTSESSIONID),
+			]);
+
 			const customerUserID = Number(id);
-			const cartid = await getValue(PREFERENCE_KEY.CARTSESSIONID);
-			 
+
 			const response = await axios.post(`${API_URL.PRODUCTSLISTING}`,
 				{
 					cat: lastValue.category,
@@ -138,7 +148,7 @@ const ProductListing = ({ route }) => {
 					priceRange: filterPrice ? filterPrice : "",
 					filterUrl: "",
 					url: "",
-					CustomerID: customerUserID,
+					CustomerID: (!customerUserID || customerUserID === 0) ? 0 : customerUserID,
 					CartSessionID: (!customerUserID || customerUserID === 0) ? cartid || '' : '',
 					isBlUrl: false
 				});
@@ -147,59 +157,67 @@ const ProductListing = ({ route }) => {
 
 			const model = new CategoryProductResponse(data);
 
-			if (pageindex === 1) {
-				updateCategoryListValue(model.result.listProduct);
-				updateFilterCategoryListValue(model.result.listProductType);
-				updateFilterBrandListResponse(model.result.listFilter);
-				updateResponsePriceValue(model.result.priceRange);
+			const catProdata = toArray(model?.result?.listProduct);
 
-				// const lastItem = newArrayList?.length > 0 ? newArrayList[newArrayList.length - 1] : null;
-				const sourceArray = customArray || newArrayList;
+			setcategoryProductList(prev => {
+				const safePrev = Array.isArray(prev) ? prev : [];
 
-			const lastValue = sourceArray?.length > 0
-				? sourceArray[sourceArray.length - 1]
-				: null;
+				return pageindex === 1
+					? catProdata
+					: [...safePrev, ...catProdata];
+			});
 
-				const lastshopValue = lastValue
-					? lastValue.categoryName + (lastValue.filterTitle ? ` / ${lastValue.filterTitle}` : '')
-					: '';
+			const catfilterProdata = toArray(model?.result?.listProductType);
 
-				updateLastShopAllValue(lastshopValue);
-				const filterValue = lastValue?.filterValue ? lastValue.filterValue : '';
-				updateFilterValue(filterValue);
+			setfilterCategoryProductList(prev => {
+				const safePrev = Array.isArray(prev) ? prev : [];
 
-			} else {
-				updateCategoryListValue(prev => [...prev, ...model.result.listProduct]);
-				updateFilterCategoryListValue(prev => [...prev, ...model.result.listProductType]);
-				updateFilterBrandListResponse(prev => [...prev, ...model.result.listFilter]);
-				updateResponsePriceValue(prev => [...prev, ...model.result.priceRange]);
-
-				// const lastItem = newArrayList?.length > 0 ? newArrayList[newArrayList.length - 1] : null;
-				const sourceArray = customArray || newArrayList;
-
-			const lastValue = sourceArray?.length > 0
-				? sourceArray[sourceArray.length - 1]
-				: null;
+				return pageindex === 1
+					? catfilterProdata
+					: [...safePrev, ...catfilterProdata];
+			});
 
 
-				const lastshopValue = lastValue
-					? lastValue.categoryName + (lastValue.filterTitle ? ` / ${lastValue.filterTitle}` : '')
-					: '';
-				const filterValue = lastValue?.filterValue ? lastValue.filterValue : '';
-				updateFilterValue(filterValue);
-				updateLastShopAllValue(lastshopValue);
-			}
+			const catfilterBrandListdata = toArray(model?.result?.listFilter);
 
-			if (pageNo < 32) {
+			setfilterBrandListResponse(prev => {
+				const safePrev = Array.isArray(prev) ? prev : [];
+
+				return pageindex === 1
+					? catfilterBrandListdata
+					: [...safePrev, ...catfilterBrandListdata];
+			});
+
+
+			const catfilterPriceRange = toArray(model?.result?.priceRange);
+
+			setresponsePriceRange(prev => {
+				const safePrev = Array.isArray(prev) ? prev : [];
+
+				return pageindex === 1
+					? catfilterPriceRange
+					: [...safePrev, ...catfilterPriceRange];
+			});
+
+
+			const lastshopValue = lastValue
+				? lastValue.categoryName + (lastValue.filterTitle ? ` / ${lastValue.filterTitle}` : '')
+				: '';
+
+			const filterValue = lastValue?.filterValue ? lastValue.filterValue : '';
+			setfilterValue(filterValue);
+			setLastShopAllValue(lastshopValue);
+
+			setIsLoaderLoading(false);
+
+			if (!model.result.listProduct || model.result.listProduct.length < 32) {
 				setHasMore(false);
 			}
-
-			setLoadingValue(false);
 			setlistloading(false);
-			setLoadingProductId(null);
+
 		} catch (error) {
-			console.error('Error fetching data:', error);
-			setLoadingValue(false);
+			console.error('Error fetchProductListingData :', error);
+			setIsLoaderLoading(false);
 			setlistloading(false);
 
 			setLoadingProductId(null);
@@ -210,36 +228,37 @@ const ProductListing = ({ route }) => {
 		try {
 
 			// ✅ wait for async value
-			const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
-			const cartid = await getValue(PREFERENCE_KEY.CARTSESSIONID);
+			const [id, cartid] = await Promise.all([
+				getValue(PREFERENCE_KEY.USERCUSTOMERID),
+				getValue(PREFERENCE_KEY.CARTSESSIONID),
+			]);
 
 			const customerUserID = Number(id);
- 
+
 			const response = await axios.post(API_URL.GETSHOPPINGCART, {
 				CustomerID: customerUserID,
 				CartSessionID: (!customerUserID || customerUserID === 0) ? cartid ?? "" : "",
-			}); 
+			});
 			const cartListModelData = new ShoppingCartResponse(response.data);
 			if (cartListModelData.success) {
 				settotalCartItem(cartListModelData.shoppingCartMaster.totalItems ?? 0);
 			}
 		} catch (error) {
-			console.error('Error fetching data:', error);
+			console.error('Error fetching fetchCartData:', error);
 		}
 	};
 
 
 	const updateQuantity = async (productId, flag) => {
 		try {
-			// setLoadingValue(true); 
-			// ✅ wait for async value
 			setLoadingProductId(productId);
-			const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
-
+			const [id, cartId] = await Promise.all([
+				getValue(PREFERENCE_KEY.USERCUSTOMERID),
+				getValue(PREFERENCE_KEY.CARTSESSIONID),
+			]);
 			const customerUserID = Number(id);
 
-			const cartId = await getValue(PREFERENCE_KEY.CARTSESSIONID);
- 
+
 
 			if (!customerUserID || customerUserID === 0) {
 				const response = await axios.post(API_URL.UPDATESHOPPINGCART, {
@@ -252,12 +271,12 @@ const ProductListing = ({ route }) => {
 					Zipcode: '',
 					Flag: flag,
 					VariationID: 0
-				}); 
+				});
 				const result = new CartResponse(response.data);
 
 
 				if (result.success) {
-					 
+
 					if (!cartId || cartId == "") {
 						await setValue(
 							PREFERENCE_KEY.CARTSESSIONID,
@@ -266,7 +285,7 @@ const ProductListing = ({ route }) => {
 					}
 					fetchCartData();
 
-					await fetchProductListingData({ best: isBestValueSelected, price: priceFilter, pageindex: pageNo }); 
+					await fetchProductListingData({ best: isBestValueSelected, price: priceFilter, pageindex: pageNo });
 				} else {
 					setPageLoading(false);
 				}
@@ -281,32 +300,30 @@ const ProductListing = ({ route }) => {
 					Zipcode: '',
 					Flag: "insert",
 					VariationID: 0
-				}); 
+				});
 				const result = response?.data;
 				if (result?.Success) {
-					await fetchProductListingData({ best: isBestValueSelected, price: priceFilter, pageindex: pageNo }); 
+					await fetchProductListingData({ best: isBestValueSelected, price: priceFilter, pageindex: pageNo });
 				} else {
-					setLoadingValue(false);
+					setIsLoaderLoading(false);
 					setLoadingProductId(null);
 				}
 			}
 
 		} catch (error) {
-			setLoadingValue(false);
+			setIsLoaderLoading(false);
 			setLoadingProductId(null);
-			console.error("Error fetching data1:", error);
+			console.error("Error fetching updateQuantity:", error);
 		}
 	};
 
 
 	const handleFilterPress = (item) => {
-		if (item.id === 1) { 
+		if (item.id === 1) {
 			openFilterBottomSheet();
 		} else if (item.id === 2) {
-			openSheet(); 
+			openSheet();
 		}
-
-		// Navigate or open overlay here
 	};
 
 	const handleProductPress = (item) => {
@@ -320,28 +337,16 @@ const ProductListing = ({ route }) => {
 
 	};
 
-	const handleWishlistPress = (item) => { 
+	const handleWishlistPress = (item) => {
 		// Handle wishlist logic here
 	};
 
-	const handleQuantityChange = async (data) => { 
+	const handleQuantityChange = async (data) => {
 		await updateQuantity(data.productId, data.action);
 	};
 
 
 	const updateLastValueOfNewArrayItem = async (item) => {
-		// setNewArrayList(prev => {
-		// 	const updated = [...prev]; // copy array
-		// 	updated[updated.length - 1] = {
-		// 		category: updated[0].category,
-		// 		parentCategoery: updated[0].parentCategoery,
-		// 		filterValue: item.filterCodeSlug,
-		// 		filterKey: "producttype",
-		// 		categoryName: updated[0].categoryName,
-		// 		filterTitle: item.filterValue
-		// 	};
-		// 	return updated;
-		// });
 
 		const updatedArray = [...newArrayList];
 
@@ -353,103 +358,23 @@ const ProductListing = ({ route }) => {
 			categoryName: updatedArray[0]?.categoryName,
 			filterTitle: item?.filterValue
 		};
- 
+
 		// ✅ Pass to API
 		await fetchProductListingData({ best: isBestValueSelected, price: priceFilter, pageindex: pageNo, customArray: updatedArray });
-
 
 		// ✅ Update state
 		setNewArrayList(updatedArray);
 	};
 
-	const updatePricefilter = (item) => {
-		setpriceFilter(prev => {
-			const updated = item; // copy array
-			return updated;
-		});
-	};
-
-
-	const updateFilterValue = (item) => {
-		setfilterValue(prev => {
-			const updated = item; // copy array
-			return updated;
-		});
-	};
-
-	const updateLastShopAllValue = (item) => {
-		setLastShopAllValue(prev => {
-			const updated = item; // copy array
-			return updated;
-		});
-	};
-
-	const updateCategoryListValue = (item) => {
-		setcategoryProductList(prev => {
-			const updated = item; // copy array
-			return updated;
-		});
-	};
-
-	const updateFilterCategoryListValue = (item) => {
-		setfilterCategoryProductList(prev => {
-			const updated = item; // copy array
-			return updated;
-		});
-	};
-
-
-	const updateFilterBrandListResponse = (item) => {
-		setfilterBrandListResponse(prev => {
-			const updated = item; // copy array
-			return updated;
-		});
-	};
-
-
-	const updateResponsePriceValue = (item) => {
-		setresponsePriceRange(prev => {
-			const updated = item; // copy array
-			return updated;
-		});
-	};
-
 
 	const handleSelectProductItem = async (item) => {
-		setLoadingValue(true);
+		setIsLoaderLoading(true);
 		setSelectedFilter(item);
 		updatefilterDepartment({});
 		updatefilterPrice('');
 		updatefilterCategory('');
 		updatefilterBrand('');
 		if (item?.filterType !== "producttype") {
-			// newArrayList.push({
-			// 	category: item?.filterCodeSlug,
-			// 	parentCategoery: newArrayList[0]?.category,
-			// 	filterValue: isfrom === "brand" ? item?.filterCodeSlug : "",
-			// 	filterKey: "category",
-			// 	categoryName: newArrayList[0]?.category,
-			// 	filterTitle: isfrom === "brand" ? item?.filterValue : "",
-
-			// });
-
-
-
-			// setNewArrayList(newArrayList);
-
-
-			// setNewArrayList(prev => [
-			// 	...prev,
-			// 	{
-			// 		category: item?.filterCodeSlug,
-			// 		parentCategoery: prev[0]?.category,
-			// 		filterValue: isfrom === "brand" ? item?.filterCodeSlug : "",
-			// 		filterKey: "category",
-			// 		categoryName: prev[0]?.category,
-			// 		filterTitle: isfrom === "brand" ? item?.filterValue : "",
-			// 	}
-			// ]);
-
 
 			const updatedArray = [
 				...newArrayList,
@@ -467,25 +392,12 @@ const ProductListing = ({ route }) => {
 			setNewArrayList(updatedArray);
 
 		} else {
-			updateFilterValue(item?.filterCodeSlug);
+			setfilterValue(item?.filterCodeSlug);
 			const lastshopValue = newArrayList?.length > 0 ? newArrayList[newArrayList?.length - 1]?.filterKey : '';
 			if (lastshopValue === "producttype" && item?.filterType === "producttype") {
 				updateLastValueOfNewArrayItem(item);
-			
+
 			} else {
-
-
-
-				// newArrayList.push({
-				// 	category: newArrayList[1]?.category,
-				// 	parentCategoery: newArrayList[1]?.parentCategoery,
-				// 	filterValue: item?.filterCodeSlug,
-				// 	filterKey: "producttype",
-				// 	categoryName: newArrayList[1].categoryName,
-				// 	filterTitle: item.filterValue
-				// });
-				// setNewArrayList(newArrayList);
-
 
 				const updatedArray = [
 					...newArrayList,
@@ -502,18 +414,6 @@ const ProductListing = ({ route }) => {
 				await fetchProductListingData({ best: isBestValueSelected, price: priceFilter, pageindex: pageNo, customArray: updatedArray });
 				setNewArrayList(updatedArray);
 
-
-				// setNewArrayList(prev => [
-				// 	...prev,
-				// 	{
-				// 		category: prev[1]?.category,
-				// 		parentCategoery: prev[1]?.parentCategoery,
-				// 		filterValue: item?.filterCodeSlug,
-				// 		filterKey: "producttype",
-				// 		categoryName: prev[1]?.categoryName,
-				// 		filterTitle: item?.filterValue
-				// 	}
-				// ]);
 			}
 
 		}
@@ -549,13 +449,13 @@ const ProductListing = ({ route }) => {
 		// update UI state
 		setIselectedSortValue(item);
 		setIsBestValueSelected(bestValue);
-		updatePricefilter(priceValue);
+		setpriceFilter(priceValue);
 
 	};
 
 	const handleShopAll = async () => {
-		setLoadingValue(true);
-		updateFilterValue('');
+		setIsLoaderLoading(true);
+		setfilterValue('');
 		updatefilterDepartment({});
 		updatefilterPrice('');
 		updatefilterCategory('');
@@ -601,8 +501,8 @@ const ProductListing = ({ route }) => {
 
 
 	const viewResultWithCloseSheet = async () => {
-		setLoadingValue(true);
-		closeSheet(); 
+		setIsLoaderLoading(true);
+		closeSheet();
 		await fetchProductListingData({
 			best: isBestValueSelected,
 			price: priceFilter,
@@ -610,63 +510,20 @@ const ProductListing = ({ route }) => {
 		});
 	};
 
-	const updatefilterDepartment = (item) => {
-		setfilterDepartment(prev => {
-			const updated = item; // copy array
-			return updated;
-		});
-	};
+	const updatefilterDepartment = (item) => setfilterDepartment(item);
 
-	const updatefilterBrand = (item) => {
-		setfilterBrand(prev => {
-			const updated = item; // copy array
-			return updated;
-		});
-	};
+	const updatefilterBrand = (item) => setfilterBrand(item);
 
-	const updatefilterPrice = (item) => {
-		setfilterPrice(prev => {
-			const updated = item; // copy array
-			return updated;
-		});
-	};
+	const updatefilterPrice = (item) => setfilterPrice(item);
 
-	const updatefilterCategory = (item) => {
-		setfilterCategory(prev => {
-			const updated = item; // copy array
-			return updated;
-		});
-	};
+	const updatefilterCategory = (item) => setfilterCategory(item);
 
 	const viewResultWithFilterCloseSheet = async () => {
-		setLoadingValue(true);
+		setIsLoaderLoading(true);
 		closeFilterBottomSheet();
 		if (filterDepartment) {
 			setSelectedFilter(filterDepartment);
 			if (filterDepartment?.filterType !== "producttype") {
-				// newArrayList.push({
-				// 	category: filterDepartment?.filterCodeSlug,
-				// 	parentCategoery: newArrayList[0]?.category,
-				// 	filterValue: "",
-				// 	filterKey: "category",
-				// 	categoryName: newArrayList[0]?.category,
-				// 	filterTitle: filterDepartment?.filterValue
-				// });
-				// setNewArrayList(newArrayList);
-
-				// setNewArrayList(prev => [
-				// 	...prev,
-				// 	{
-				// 		category: filterDepartment?.filterCodeSlug,
-				// 		parentCategoery: prev[0]?.category,
-				// 		filterValue: isfrom === "brand" ? filterDepartment?.filterCodeSlug : "",
-				// 		filterKey: "category",
-				// 		categoryName: prev[0]?.category,
-				// 		filterTitle: isfrom === "brand" ? filterDepartment?.filterValue : "",
-				// 	}
-				// ]);
-
-
 				const updatedArray = [
 					...newArrayList,
 					{
@@ -682,32 +539,11 @@ const ProductListing = ({ route }) => {
 				await fetchProductListingData({ best: isBestValueSelected, price: priceFilter, pageindex: pageNo, customArray: updatedArray });
 				setNewArrayList(updatedArray);
 			} else {
-				updateFilterValue(filterDepartment?.filterCodeSlug);
+				setfilterValue(filterDepartment?.filterCodeSlug);
 				const lastshopValue = newArrayList?.length > 0 ? newArrayList[newArrayList?.length - 1]?.filterKey : '';
 				if (lastshopValue === "producttype" && filterDepartment?.filterType === "producttype") {
 					updateLastValueOfNewArrayItem(filterDepartment);
 				} else {
-					// newArrayList.push({
-					// 	category: newArrayList[1]?.category,
-					// 	parentCategoery: newArrayList[1]?.parentCategoery,
-					// 	filterValue: filterDepartment?.filterCodeSlug,
-					// 	filterKey: "producttype",
-					// 	categoryName: newArrayList[1]?.categoryName,
-					// 	filterTitle: filterDepartment?.filterValue
-					// });
-					// setNewArrayList(newArrayList);
-
-					// setNewArrayList(prev => [
-					// 	...prev,
-					// 	{
-					// 		category: prev[1]?.category,
-					// 		parentCategoery: prev[1]?.parentCategoery,
-					// 		filterValue: filterDepartment?.filterCodeSlug,
-					// 		filterKey: "producttype",
-					// 		categoryName: prev[1]?.categoryName,
-					// 		filterTitle: filterDepartment?.filterValue
-					// 	}
-					// ]);
 					const updatedArray = [
 						...newArrayList,
 						{
@@ -725,14 +561,10 @@ const ProductListing = ({ route }) => {
 
 				}
 
-
 			}
 
-		} 
+		}
 	};
-
-
-
 
 	const renderProductItem = ({ item }) => (
 		<ProductCard
@@ -780,24 +612,26 @@ const ProductListing = ({ route }) => {
 	);
 
 
-	return (
-		<View style={{ flex: 1 }}>
-			<View style={[commonStyles.commonContainer, { backgroundColor: bgFullStyle }]}>
-				<ProductHeaderContainer type='title' title={item?.categoryName} onPress={() => navigation.goBack('')} />
-				<FilterBar onPress={handleFilterPress} />
+	const renderHeader = ({ item }) => (
+		<View>
+			<ProductHeaderContainer
+				type="title"
+				title={item?.categoryName}
+				onPress={() => navigation.goBack("")}
+			/>
 
+			<FilterBar onPress={handleFilterPress} />
 
+			<View style={[external.mh_10]}>
 				<ScrollView
-					contentContainerStyle={[external.Pb_80]}
 					scrollEnabled={true}
-					alwaysBounceVertical={true}
-					// style={[styles.container, { backgroundColor: bgFullStyle }]}
+					alwaysBounceVertical={true} 
 					showsVerticalScrollIndicator={false}>
 
-					<View style={[external.mh_10, external.mb_60, { flex: 1 }]}>
+					<View style={[external.mh_10]}>
 						<ScrollView horizontal={true}                 // ✅ Horizontal scroll
 							showsHorizontalScrollIndicator={false}>
-							<View style={{ flexDirection: 'row', flex: 1 }}>
+							<View style={{ flexDirection: 'row' }}>
 								{filterCategoryProductList && <TouchableOpacity style={[
 									commonStyles.commonContainer,
 									external.m_5,
@@ -825,7 +659,7 @@ const ProductListing = ({ route }) => {
 											}}
 										>
 											<Text
-												style={[styles.title, { textAlign: 'center', color: 'white' }]}
+												style={[styles.title, { textAlign: 'center', color: appColors.textColorWhite, }]}
 											>
 												Shop All
 											</Text>
@@ -836,37 +670,46 @@ const ProductListing = ({ route }) => {
 										{lastShopAllValue}
 									</Text>}
 								</TouchableOpacity>}
-								<View style={{ flex: 1 }}>
-									<FlatList
-										data={filterCategoryProductList}
-										renderItem={renderItem}
-										horizontal={true}
-										contentContainerStyle={[external.mt_10]}
-										showsVerticalScrollIndicator={false}
-										showsHorizontalScrollIndicator={false}
-										scrollEnabled={false}
-									/>
-								</View>
+								<FlatList
+									data={filterCategoryProductList}
+									renderItem={renderItem}
+									horizontal={true}
+									showsVerticalScrollIndicator={false}
+									showsHorizontalScrollIndicator={false}
+									scrollEnabled={false}
+								/>
 							</View>
 						</ScrollView>
-
-						{categoryProductList && <FlatList
-							data={categoryProductList}
-							// data={productData}
-							renderItem={renderProductItem}
-							keyExtractor={(item) => item.productID.toString()}
-							contentContainerStyle={{ paddingVertical: 10 }}
-							onEndReached={loadMore}
-
-							alwaysBounceVertical={false}
-							scrollEnabled={false}
-						/>}
 					</View>
 				</ScrollView>
 			</View>
-			{isLoading && <Modal transparent visible={isLoading}>
-				<LoaderScreen />
-			</Modal>}
+		</View>
+	);
+
+
+	return (
+		<View style={{ flex: 1 }}>
+			<View style={[commonStyles.commonContainer, { backgroundColor: bgFullStyle }]}>
+				
+				<FlatList
+					data={categoryProductList || []}
+					renderItem={renderProductItem}
+					keyExtractor={(item) => item.productID.toString()}
+
+					ListHeaderComponent={renderHeader}
+
+					contentContainerStyle={{ paddingBottom: 80 }}
+
+					onEndReached={loadMore}
+					onEndReachedThreshold={0.5}
+
+					initialNumToRender={8}
+					maxToRenderPerBatch={10}
+					windowSize={5}
+					removeClippedSubviews={true}
+					showsVerticalScrollIndicator={false}
+				/>
+			</View>
 			{isSelectedSort && <View style={styles.bottomsheetContainer}>
 				<Modal transparent visible={isSelectedSort} animationType="none" >
 					<TouchableWithoutFeedback onPress={closeSheet}>
@@ -1015,7 +858,6 @@ const ProductListing = ({ route }) => {
 		</View>
 
 	);
-
 
 };
 

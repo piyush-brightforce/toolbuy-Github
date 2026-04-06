@@ -1,10 +1,10 @@
 import {Image, ImageBackground} from 'react-native';
-import React, {useEffect} from 'react';
+import React from 'react';
 import images from '../../utils/images';
 import styles from './style.css';
 import {useValues} from '../../../App';
 
-const LoaderScreen = ({navigation}) => {
+const LoaderScreen = () => {
 
   const {isDark} = useValues();
   const imageBg = isDark ? images.loaderBgDark : images.loaderBg;

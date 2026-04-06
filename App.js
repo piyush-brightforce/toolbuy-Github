@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { SafeAreaView, LogBox } from 'react-native';
+import { SafeAreaView, LogBox, Modal } from 'react-native';
 import MyStack from './src/navigation';
 import { external } from './src/style/external.css';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from './src/assets/language';  
 import Toast from 'react-native-toast-message';
 import { Buffer } from 'buffer';
+import CustomLoader from './src/commonComponents/customLoader/customloader';
 
 global.Buffer = Buffer;
 
@@ -42,6 +43,9 @@ const App = () => {
   const [totalCartItem, settotalCartItem] = useState(0);
   const [menuContent, setMenuContent] = useState([]);
   const [customerUserID, setCustomerUseID] = useState([]);
+  const [allBrandsData, setAllBrandsData] = useState([]);
+  const [isLoaderLoading, setIsLoaderLoading] = useState(false);
+ 
   const { t } = useTranslation();
 
   const contextValues = {
@@ -75,6 +79,10 @@ const App = () => {
     customerUserID,
     setMenuContent,
     setCustomerUseID,
+    allBrandsData,
+    setAllBrandsData,
+    isLoaderLoading,
+    setIsLoaderLoading,
   };
 
   return (
@@ -87,7 +95,8 @@ const App = () => {
 
         {/* ✅ ADD THIS HERE */}
         <Toast bottomOffset={10} position={'bottom'} autoHide={true} visibilityTime={1000} />
-
+        {/** ✅ ADD THIS HERE */}
+        <CustomLoader visible={isLoaderLoading} />
       </CommonContext.Provider>
     </GestureHandlerRootView>
   );

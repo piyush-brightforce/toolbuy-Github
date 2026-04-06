@@ -1,29 +1,24 @@
 import { Image, Pressable, Text, View, Modal } from 'react-native';
 import React, { useEffect, useState, useCallback } from 'react';
 import { external } from '../../style/external.css';
-import { commonStyles } from '../../style/commonStyle.css';
-import images from '../../utils/images';
+import { commonStyles } from '../../style/commonStyle.css'; 
 import { profileData } from '../../data/profileData';
 import { RightArrow } from '../../assets/icons/rightArrow';
 import styles from './style.css';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useValues } from '../../../App';
 import LinearGradient from 'react-native-linear-gradient';
 import appColors from '../../themes/appColors';
 import { deleteValue, getValue, PREFERENCE_KEY } from '../../utils/helper/localStorage';
-import LoginResponseModel from '../../models/login/loginresponsemodel';
-import HeaderContainer from '../../commonComponents/headingContainer';
-import LoaderScreen from '../loaderScreen';
+import LoginResponseModel from '../../models/login/loginresponsemodel';  
 import SignIn from '../auth/login';
 import appFonts from '../../themes/appFonts';
-import ProductHeaderContainer from '../productScreen/productHeaderContainer';
-import AddressHeaderContainer from '../profileScreen/addressheaderContainer/addressheaderContainer';
+import ProductHeaderContainer from '../productScreen/productHeaderContainer'; 
 
 const MyAccountScreen = ({ route }) => {
 
   const { isFrom } = route?.params || {};
-
-  const { setCustomerUseID } = useValues();
+ 
   const navigation = useNavigation();
 
   const handleLogout = async () => {
@@ -40,11 +35,30 @@ const MyAccountScreen = ({ route }) => {
   };
 
 
-  const [userResponse, setUserResponse] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [userResponse, setUserResponse] = useState(null); 
+
+  const {
+    textColorStyle,
+    linearColorStyle,
+    bgFullStyle,
+    isDark,
+    viewRTLStyle,
+    textRTLStyle,
+    imageRTLStyle,
+    t,
+    isLoaderLoading,
+    setIsLoaderLoading,
+    setCustomerUseID
+  } = useValues();
+
+  const colors = isDark
+    ? ['#43454A', '#24262C']
+    : [appColors.screenBg, appColors.screenBg];
+
 
 
   useEffect(() => {
+    setIsLoaderLoading(true);
     const initialize = async () => {
       await getUserResponse();
     };
@@ -60,43 +74,24 @@ const MyAccountScreen = ({ route }) => {
         const parsedData = JSON.parse(jsonValue);
         const setresponse = new LoginResponseModel(parsedData);
 
-        setLoading(false);
+        setIsLoaderLoading(false);
         setUserResponse(setresponse);
 
       }
-      setLoading(false);
+      setIsLoaderLoading(false);
     } catch (e) {
-      setLoading(false);
+      setIsLoaderLoading(false);
       console.error("Fetch error:", e);
     } finally {
-      setLoading(false);
+      setIsLoaderLoading(false);
     }
   };
-
-  const {
-    textColorStyle,
-    linearColorStyle,
-    bgFullStyle,
-    isDark,
-    viewRTLStyle,
-    textRTLStyle,
-    imageRTLStyle,
-    t,
-  } = useValues();
-
-  const colors = isDark
-    ? ['#43454A', '#24262C']
-    : [appColors.screenBg, appColors.screenBg];
-
-
-  if (loading)
-    return (<Modal transparent visible={loading}>
-      <LoaderScreen />
-    </Modal>)
-  if (!loading && userResponse)
+ 
+  if (!isLoaderLoading && userResponse)
     return (
       <View style={external.fx_1}>
-        <ProductHeaderContainer title={t('transData.myAccount')} type={'title'} righticon={false} />
+        			{!isFrom ? <ProductHeaderContainer title={t('transData.myAccount')} type={'title'} righticon={false}/>:<ProductHeaderContainer title={t('transData.myAccount')} type={'title'} righticon={false} onPress={() => navigation.goBack()} /> }
+ 
         <View style={[styles.viewContainer, { backgroundColor: bgFullStyle }]}>
 
           <View style={[external.as_center]}>
@@ -162,7 +157,7 @@ const MyAccountScreen = ({ route }) => {
       </View>
     );
 
-  if (!loading && !userResponse)
+  if (!isLoaderLoading && !userResponse)
     return (<SignIn />);
 };
 

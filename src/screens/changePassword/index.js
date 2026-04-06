@@ -236,7 +236,7 @@ const ChangePasswordScreen = () => {
             title={t('transData.changePassword')}
             backgroundColor={appColors.primary}
             onPress={() => handlceChangePassword()}
-            color={'white'}
+            color={appColors.textColorWhite}
             isLoading={isLoading}
 
           />

@@ -4,20 +4,15 @@ import HeaderContainer from '../../../commonComponents/headingContainer';
 import { phoneMo, smithaWilliams, smithaWilliamsMail } from '../../../constant';
 import { commonStyles } from '../../../style/commonStyle.css';
 import { external } from '../../../style/external.css';
-import styles from './style.css';
-import images from '../../../utils/images';
+import styles from './style.css'; 
 import TextInputs from '../../../commonComponents/textInputs';
-import appColors from '../../../themes/appColors';
-import { Call, Edit, Profile } from '../../../utils/icon';
-import { Email } from '../../../assets/icons/email';
-import NavigationButton from '../../../commonComponents/navigationButton';
-import { windowHeight } from '../../../themes/appConstant';
+import appColors from '../../../themes/appColors'; 
+import NavigationButton from '../../../commonComponents/navigationButton'; 
 import { useValues } from '../../../../App';
 import { getValue, PREFERENCE_KEY, setValue } from '../../../utils/helper/localStorage';
 import LoginResponseModel from '../../../models/login/loginresponsemodel';
 import axios from 'axios';
-import API_URL from '../../../config/apiConfig';
-import LoaderScreen from '../../loaderScreen';
+import API_URL from '../../../config/apiConfig'; 
 import Toast from 'react-native-toast-message';
 import RadioButton from '../../../commonComponents/radioButton';
 import { useNavigation } from '@react-navigation/native';
@@ -36,10 +31,10 @@ const EditProfile = () => {
   const [isBussinessnameTyping, setBussinessnameTyping] = useState(false);
 
 
-  const [userResponse, setUserResponse] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [userResponse, setUserResponse] = useState(null); 
   const [buttonLoading, setButtonLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('Personal Account');
+
   const {
     textColorStyle,
     linearColorStyle,
@@ -49,24 +44,33 @@ const EditProfile = () => {
     t,
     isDark,
     linearColorStyleTwo,
-    currSymbol
+    currSymbol,
+    isLoaderLoading,
+    setIsLoaderLoading
   } = useValues();
 
 
-  useEffect(() => {
-    getUserResponse();
-  }, []);
+ useEffect(() => {
+      setIsLoaderLoading(true);
+      const initialize = async () => {
+        getUserResponse();
+      };
+  
+      initialize();
+    }, []);
+
+   
+  
 
   const getUserResponse = async () => { 
 
     try {
-      setLoading(true); 
       const jsonValue = await getValue(PREFERENCE_KEY.USERRESPONSE);
        if (jsonValue != null) {
          const parsedData = JSON.parse(jsonValue);
          const setresponse = new LoginResponseModel(parsedData);
  
-        setLoading(false);
+        setIsLoaderLoading(false);
          setUserResponse(setresponse);
 
          setNameValue(setresponse.FullName);
@@ -74,11 +78,11 @@ const EditProfile = () => {
          setEmailValue(setresponse.email);
  
       }
-      setLoading(false);
+      setIsLoaderLoading(false);
     } catch (e) {
-       setLoading(false);
+       setIsLoaderLoading(false);
      } finally {
-       setLoading(false);
+       setIsLoaderLoading(false);
     }
   };
 
@@ -199,12 +203,8 @@ const EditProfile = () => {
     } else {
     }
   };
-
-  if (loading)
-    return (<Modal transparent visible={loading}>
-      <LoaderScreen />
-    </Modal>)
-  if (!loading && userResponse)
+ 
+  if (!isLoaderLoading && userResponse)
     return (
       <View
         style={[
@@ -334,7 +334,7 @@ const EditProfile = () => {
               ]}>
               <View style={{ width: 170 }}>
                 <NavigationButton
-                  backgroundColor={isDark ? linearColorStyle : 'white'}
+                  backgroundColor={isDark ? linearColorStyle : appColors.textColorWhite}
                   title={'Cancel'}
                   color={isDark ? appColors.screenBg : appColors.titleText}
                   borderWidth={0.3}

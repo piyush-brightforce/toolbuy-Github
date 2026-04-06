@@ -72,12 +72,7 @@ export const useAuthForm = navigation => {
     setButtonDisabled(isDisabled);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email, phone, password, confirmPassword]);
-
-  const handleSignUp = () => {
-    if (!isButtonDisabled) {
-      navigation.navigate('LoaderScreen');
-    }
-  };
+ 
 
   return {
     email,
@@ -104,7 +99,6 @@ export const useAuthForm = navigation => {
     setEmailTyping,
     setCallTyping,
     setPwdTyping,
-    setConfPwdTyping,
-    handleSignUp,
+    setConfPwdTyping, 
   };
 };

@@ -10,10 +10,10 @@ import {
 	TouchableWithoutFeedback,
 } from 'react-native';
 import FixedSvgFromUrl from '../../../commonComponents/customSvgImage/customSvgImage';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import BottomContainer from '../../../commonComponents/bottomContainer';
 import { commonStyles } from '../../../style/commonStyle.css';
-import { windowWidth, fontSizes, SCREEN_WIDTH, windowHeight } from '../../../themes/appConstant';
+import { windowWidth, fontSizes, SCREEN_WIDTH, windowHeight, SCREEN_HEIGHT } from '../../../themes/appConstant';
 import { external } from '../../../style/external.css';
 import { Heart, KeyboardDoubleArrowRight, RemoveG, AddG, Cross, Favorite } from '../../../utils/icon';
 import styles from './style.css';
@@ -27,7 +27,6 @@ import API_URL from '../../../config/apiConfig';
 import { ProductDetailResponseModel } from '../../../models/productDetails/productDetailsResponse';
 import RenderHtml from 'react-native-render-html';
 import appFonts from '../../../themes/appFonts';
-import LoaderScreen from '../../loaderScreen';
 import { getValue, PREFERENCE_KEY, setValue } from '../../../utils/helper/localStorage';
 import React, { useState, useEffect, useCallback } from 'react';
 import CartResponse from '../../../models/cart/cartresponse';
@@ -46,6 +45,10 @@ import { HeadPhoneIcon } from '../../../assets/googleIcons/Headphones';
 import { PolicyIcon } from '../../../assets/googleIcons/PolicyIcon';
 import { PaymentsIcon } from '../../../assets/googleIcons/PaymentsIcon';
 import NavigationButton from '../../../commonComponents/navigationButton';
+import { PurchaseListResponse } from '../../../models/purchaselist/purchaselistmodel';
+import TextInputs from '../../../commonComponents/textInputs';
+import DynamicDropdown1 from '../../../commonComponents/dynamicDropdown/dynamicDropdown1';
+import { FavoriteFillG } from '../../../assets/googleIcons/FavouriteFill';
 
 const ProductDetail = ({ route }) => {
 
@@ -116,10 +119,9 @@ const ProductDetail = ({ route }) => {
 		t,
 		settotalCartItem,
 		currency,
-		curreLocale
+		curreLocale,
+		setIsLoaderLoading
 	} = useValues();
-
-	const [pageLoading, setPageLoading] = useState(true);
 
 	const [activeTab, setActiveTab] = useState('Highlights');
 	const [activeImageTab, setActiveImageTab] = useState('Images');
@@ -130,6 +132,8 @@ const ProductDetail = ({ route }) => {
 	const [isBuyinstallmentVisible, setBuyinstallmentVisible] = useState(false);
 	const [isOpenImageView, setIsOpenImageView] = useState(false);
 
+	const [isOpenFavouriteView, setIsOpenFavouriteView] = useState(false);
+
 	const [productsDetails, setProductDetails] = useState({});
 	const [productImages, setProductImages] = useState([]);
 	const [productSpecifications, setproductSpecifications] = useState([]);
@@ -138,12 +142,28 @@ const ProductDetail = ({ route }) => {
 
 	const [quantity, setQuantity] = useState(1);
 	const [insertFlag, setInsertFlag] = useState('insert');
-	
-	useEffect(() => { 
-		if (product) {
-			fetchCategoryData();
-		}
-	}, []);
+	const [purchaseList, setPurchaseList] = useState();
+	const [txtPlacelistname, setTxtPlacelistname] = useState();
+	const [txtErrorPlacelistname, setTxtErrorPlacelistname] = useState();
+	const [addpurchaseLoading, setAddpurchaseLoading] = useState();
+	const [toggleaddpurchase, setToggleaddpurchase] = useState(false);
+
+	const [purchaselistmasterid, setPurchaselistmasterid] = useState();
+
+	//  React to changes
+	useEffect(() => {
+		setIsLoaderLoading(true);
+		const initialize = async () => {
+			if (product) {
+				await fetchCategoryData();
+				await fetchPurchaseListingData({ loading: false });
+			} else {
+				setIsLoaderLoading(false);
+			}
+		};
+
+		initialize();
+	}, [product]);
 
 	const fetchCartData = async () => {
 		try {
@@ -153,11 +173,11 @@ const ProductDetail = ({ route }) => {
 			const cartid = await getValue(PREFERENCE_KEY.CARTSESSIONID);
 
 			const customerUserID = Number(id);
- 
+
 			const response = await axios.post(API_URL.GETSHOPPINGCART, {
 				CustomerID: customerUserID,
 				CartSessionID: (!customerUserID || customerUserID === 0) ? cartid ?? "" : "",
-			}); 
+			});
 			const cartListModelData = new ShoppingCartResponse(response.data);
 			if (cartListModelData.success) {
 				settotalCartItem(cartListModelData.shoppingCartMaster.totalItems ?? 0);
@@ -166,12 +186,78 @@ const ProductDetail = ({ route }) => {
 			console.error('Error fetching data:', error);
 		}
 	};
- 
-	const fetchCategoryData = async () => { 
+
+
+	const addPurchaseList = async (params) => {
+
+		try {
+			console.log("calling add purchase 1", params);
+			setAddpurchaseLoading(true);
+
+			console.log("calling add purchase 2");
+			const response = await axios.post(`${API_URL.ADDPURCHASELIST}`, params);
+
+			console.log("calling add purchase 3");
+			const data = response.data;
+
+			console.log("calling add purchase 4", data);
+			if (data.Success) {
+
+				console.log("calling add purchase 5", data);
+				setTxtPlacelistname('');
+				setIsOpenFavouriteView(false);
+				await fetchPurchaseListingData({ loading: true });
+			} else {
+				console.log("calling add purchase 6", data);
+				setAddpurchaseLoading(false);
+			}
+
+		} catch (error) {
+			console.log("calling add purchase 7", error);
+			setAddpurchaseLoading(false);
+			console.error('Error fetching datax:', error);
+		}
+	};
+
+
+	const fetchPurchaseListingData = async ({ loading = false }) => {
+
+		try {
+
+			const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
+			const customerUserID = Number(id);
+			const cartid = await getValue(PREFERENCE_KEY.CARTSESSIONID);
+
+
+			const response = await axios.post(`${API_URL.GETPURCHASELIST}`,
+				{
+					CustomerID: customerUserID,
+					CartSessionID: (!customerUserID || customerUserID === 0) ? cartid || '' : '',
+
+				});
+
+			const data = response.data;
+
+			const model = new PurchaseListResponse(data);
+			setPurchaseList(model?.result?.purchaseList ?? []);
+			if (model?.result?.purchaseList?.length > 0) {
+				setAddpurchaseLoading(false);
+				setIsLoaderLoading(loading);
+				await fetchCategoryData();
+			} else {
+				setToggleaddpurchase(true);
+			}
+
+		} catch (error) {
+			console.error('Error fetching data:', error);
+		}
+	};
+
+	const fetchCategoryData = async () => {
 		const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
 
 		const customerUserID = Number(id);
- 
+
 
 		const cartid = await getValue(PREFERENCE_KEY.CARTSESSIONID);
 		const response = await axios.post(API_URL.PRODUCTDETAIL, {
@@ -179,41 +265,41 @@ const ProductDetail = ({ route }) => {
 			ProductCode: product?.code,
 			CustomerID: customerUserID
 		});
- 
+
 		const productDetail = new ProductDetailResponseModel(response?.data);
- 
-		if (productDetail.success) { 
+
+		if (productDetail.success) {
 			setproductSpecifications(
 				productDetail?.result?.productSpecificationList
 			);
- 
+
 			setProductImages(
 				productDetail?.result?.productImageList
 			);
- 
+
 			if (productDetail?.result?.filterMasterList) {
 				setProductDetails(productDetail?.result ?? {});
-			} 
+			}
 
-			setPageLoading(false); 
+			setToggleaddpurchase(false);
+			setIsLoaderLoading(false);
 		} else {
-			setPageLoading(false); 
+			setIsLoaderLoading(false);
 		}
 
 	};
 
 	const updateQuantity = async (productId, newQuantity) => {
 		try {
-			// setPageLoading(true);
 			setisCartLoading(true);
 			// ✅ wait for async value
 			const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
 
 			const customerUserID = Number(id);
 			const cartId = await getValue(PREFERENCE_KEY.CARTSESSIONID);
- 
+
 			if (!customerUserID || customerUserID === 0) {
-			 
+
 				const response = await axios.post(API_URL.UPDATESHOPPINGCART, {
 					ProductID: productId,
 					CustomerID: 0,
@@ -224,10 +310,10 @@ const ProductDetail = ({ route }) => {
 					Zipcode: '',
 					Flag: insertFlag,
 					VariationID: 0
-				}); 
+				});
 				const result = new CartResponse(response.data);
 				if (result.success) {
-					 
+
 
 					if (!cartId || cartId == "") {
 						await setValue(
@@ -236,7 +322,7 @@ const ProductDetail = ({ route }) => {
 						);
 					}
 
-					 
+
 					Toast.show({
 						type: 'success',
 						text1: 'Success',
@@ -313,7 +399,7 @@ const ProductDetail = ({ route }) => {
 	};
 
 	const openImageviewAlert = () => {
-		setIsOpenImageView(true); 
+		setIsOpenImageView(true);
 	};
 
 	const getYoutubeId = (url) => {
@@ -324,9 +410,8 @@ const ProductDetail = ({ route }) => {
 	};
 
 
-	const selectedImageHandle = async (item) => { 
+	const selectedImageHandle = async (item) => {
 		setSelectedImage(item);
-
 	};
 
 	const renderImageItem = ({ item, index }) => (
@@ -397,7 +482,7 @@ const ProductDetail = ({ route }) => {
 					<View
 						style={{
 							width: '90%',
-							backgroundColor: 'white',
+							backgroundColor: appColors.textColorWhite,
 							borderRadius: 12,
 							padding: 20,
 							maxHeight: '80%',
@@ -462,7 +547,7 @@ const ProductDetail = ({ route }) => {
 					<View
 						style={{
 							width: '90%',
-							backgroundColor: 'white',
+							backgroundColor: appColors.textColorWhite,
 							borderRadius: 12,
 							padding: 20,
 							maxHeight: '80%',
@@ -551,7 +636,7 @@ const ProductDetail = ({ route }) => {
 					<View
 						style={{
 							width: '90%',
-							backgroundColor: 'white',
+							backgroundColor: appColors.textColorWhite,
 							borderRadius: 12,
 							padding: 20,
 							maxHeight: '80%',
@@ -643,7 +728,7 @@ const ProductDetail = ({ route }) => {
 					<View
 						style={{
 							width: '90%',
-							backgroundColor: 'white',
+							backgroundColor: appColors.textColorWhite,
 							borderRadius: 12,
 							padding: 20,
 							maxHeight: '80%',
@@ -695,9 +780,6 @@ const ProductDetail = ({ route }) => {
 		);
 
 	return (<View style={{ flex: 1 }}>
-		{pageLoading && <Modal transparent visible={pageLoading}>
-			<LoaderScreen />
-		</Modal>}
 		{isOpenImageView && <CommonModal
 			isVisible={isOpenImageView}
 			value={
@@ -729,7 +811,7 @@ const ProductDetail = ({ route }) => {
 									activeImageTab === 'Images' && styles.tabTextActive,
 									{ color: textColorStyle },
 								]}>
-								{`Images ${(productImages && productImages.length > 0) ? productImages.length : 0}`}
+								{`Images (${(productImages && productImages.length > 0) ? productImages.length : 0})`}
 							</Text>
 						</TouchableOpacity>
 						<TouchableOpacity
@@ -744,7 +826,7 @@ const ProductDetail = ({ route }) => {
 									activeImageTab === 'Video' && styles.tabTextActive,
 									{ color: textColorStyle },
 								]}>
-								{"Video"}
+								{"Video (1)"}
 							</Text>
 						</TouchableOpacity>
 					</View>
@@ -776,11 +858,29 @@ const ProductDetail = ({ route }) => {
 							contentContainerStyle={[external.mh_10,]}
 							showsHorizontalScrollIndicator={false}
 						/>}
-						{activeImageTab === "Video" && <View style={{ height: 300, width: '100%' }}>{productsDetails?.productMaster?.youtubeVideo && <YoutubePlayer
-							height={220}
-							play={true}
-							videoId={getYoutubeId(productsDetails?.productMaster?.youtubeVideo)}
-						/>}</View>}
+						{activeImageTab === "Video" && <View style={{ height: windowHeight(320), width: '100%' }}>
+							<Text
+								style={[
+									commonStyles.titleText19,
+									{ color: textColorStyle, fontSize: fontSizes.FONT18, fontFamily: appFonts.bold },
+									{ textAlign: textRTLStyle }, external.mt_10
+								]}>
+								{productsDetails?.productMaster?.productTitle}
+							</Text>
+
+							<Text
+								style={[
+									commonStyles.titleText19,
+									{ color: textColorStyle, fontSize: fontSizes.FONT18, fontFamily: appFonts.bold },
+									{ textAlign: textRTLStyle }, external.mv_10
+								]}>
+								Product Video
+							</Text>
+							{productsDetails?.productMaster?.youtubeVideo && <YoutubePlayer
+								height={220}
+								play={true}
+								videoId={getYoutubeId(productsDetails?.productMaster?.youtubeVideo)}
+							/>}</View>}
 						{productsDetails?.productMaster?.qty === 0 ? <View style={styles.outOfStockButton}>
 							<Text style={styles.outOfStockText}>
 								{t('transData.OUT_OF_STOCK')}
@@ -810,8 +910,8 @@ const ProductDetail = ({ route }) => {
 								</TouchableOpacity>
 							</View>
 							{isCartLoading ? <NavigationButton isLoading={isCartLoading} color={appColors.screenBg}
-							backgroundColor={appColors.primary} />:<TouchableOpacity onPress={() => updateQuantity(productsDetails?.productMaster?.productID, quantity)}
-								style={[external.fd_row, external.ai_center, external.pt_4, { backgroundColor: appColors.primary, borderRadius: 30 }, external.ph_20]}>
+								backgroundColor={appColors.primary} /> : <TouchableOpacity onPress={() => updateQuantity(productsDetails?.productMaster?.productID, quantity)}
+									style={[external.fd_row, external.ai_center, external.pt_4, { backgroundColor: appColors.primary, borderRadius: 30 }, external.ph_20]}>
 								<Cart />
 								<Text style={[styles.buyNowText, { paddingRight: 10 }]}>{t('transData.ADD_TO_CART')}</Text>
 							</TouchableOpacity>}
@@ -822,7 +922,101 @@ const ProductDetail = ({ route }) => {
 				</View>
 			}
 		/>}
+		{isOpenFavouriteView && <CommonModal
+			isVisible={isOpenFavouriteView}
+			value={
+				<View>
+					<View
+						style={[
+							external.fd_row,
+							external.ai_center,
+							external.js_space,
+						]}>
 
+						<View style={[external.fd_row,
+						external.ai_center]}>
+							<Favorite />
+							<Text
+								style={[commonStyles.titleText19, { color: textColorStyle }, external.ml_10]}>
+								{!toggleaddpurchase ? "Add to existing Purchase List" : 'Create New Purchase List'}
+							</Text>
+						</View>
+						<TouchableOpacity onPress={() => setIsOpenFavouriteView(false)}>
+							<Cross />
+						</TouchableOpacity>
+					</View>
+					<View style={{ height: SCREEN_HEIGHT * 0.5 }}>
+
+						<ScrollView>
+							{!toggleaddpurchase ? <View style={[external.mv_15]}>
+								<DynamicDropdown1 data={purchaseList}
+									labelKey="listName"
+									valueKey="purchaseListMasterID"
+									placeholder="Select List"
+									onSelect={(item) => {
+										setPurchaselistmasterid(item?.purchaseListMasterID);
+									}} />
+							</View> :
+								<View style={[external.fd_coloumn]}>
+									<TextInputs
+										title={'Listname'}
+										placeHolder={"Enter List Name"}
+										value={txtPlacelistname}
+										onChangeText={text => {
+											setTxtPlacelistname(text);
+
+											if (text.trim() === '') {
+												setTxtErrorPlacelistname('Please enter a list name.');
+											} else {
+												setTxtErrorPlacelistname('');
+											}
+										}} />
+									{txtErrorPlacelistname !== '' && (
+										<Text style={[styles.errorStyle, external.mb_10]}>{txtErrorPlacelistname}</Text>
+									)}</View>}
+
+						</ScrollView>
+					</View>
+					<NavigationButton onPress={async () => {
+						const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
+
+						const customerUserID = Number(id);
+						if (!toggleaddpurchase) {
+							console.log("purchaselistmasterid", purchaselistmasterid, productsDetails?.productMaster?.productID, customerUserID);
+							purchaselistmasterid && await addPurchaseList({ PurchaseListMasterID: purchaselistmasterid, ProductID: productsDetails?.productMaster?.productID, CustomerID: customerUserID, ListName: "", CartSessionID: "" });
+						} else {
+							console.log("purchaselistmasterid", txtPlacelistname, productsDetails?.productMaster?.productID, customerUserID);
+							txtPlacelistname && await addPurchaseList({ ListName: txtPlacelistname, CustomerID: customerUserID, CartSessionID: "", ProductID: productsDetails?.productMaster?.productID });
+						}
+
+					}}
+						title="Save to your Purchase List" color={appColors.screenBg} backgroundColor={appColors.primary} isLoading={addpurchaseLoading} />
+
+					<View style={[external.fd_row, external.mt_10, external.ai_center]}>
+						<View style={external.fx_1}>
+							<SolidLine />
+						</View>
+						<Text style={[commonStyles.subtitleText, external.mh_10, { color: textColorStyle }]}>or</Text>
+						<View style={external.fx_1}>
+							<SolidLine />
+						</View>
+					</View>
+					{!toggleaddpurchase ? <Text style={{ textAlign: 'center' }}>
+						Want to Create New Purchase List?
+						<Text onPress={() => setToggleaddpurchase(!toggleaddpurchase)} style={{ color: appColors.primary }}>
+							{" Click Here"}
+						</Text>
+					</Text> :
+						<Text style={{ textAlign: 'center' }}>
+							Already have Purchase List?
+							<Text onPress={() => setToggleaddpurchase(!toggleaddpurchase)} style={{ color: appColors.primary }}>
+								{" Click Here"}
+							</Text>
+						</Text>}
+
+				</View>
+			}
+		/>}
 		<View
 			style={[commonStyles.commonContainer, { backgroundColor: bgFullStyle }]}>
 			<ScrollView
@@ -937,8 +1131,20 @@ const ProductDetail = ({ route }) => {
 								<TouchableOpacity style={styles.actionIcon}>
 									<ShareIcon />
 								</TouchableOpacity>
-								<TouchableOpacity style={styles.actionIcon}>
-									<Favorite />
+								<TouchableOpacity style={[styles.actionIcon, { backgroundColor: (productsDetails?.productMaster?.purchaseListID === 0 || !productsDetails?.productMaster?.purchaseListID) ? appColors.screenBg : appColors.textColorBlack }]} onPress={async () => {
+									const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
+									const customerUserID = Number(id);
+									if (!customerUserID || customerUserID === 0) {
+										navigation.navigate("Login");
+									} else {
+										if (productsDetails?.productMaster?.purchaseListID === 0 || !productsDetails?.productMaster?.purchaseListID) {
+											setIsOpenFavouriteView(true);
+										}
+									}
+
+								}}>
+									{(productsDetails?.productMaster?.purchaseListID === 0 || !productsDetails?.productMaster?.purchaseListID) ? <Favorite /> : <FavoriteFillG />}
+
 								</TouchableOpacity>
 								<TouchableOpacity style={styles.actionIcon}>
 									<DownloadIcon />
@@ -975,7 +1181,7 @@ const ProductDetail = ({ route }) => {
 							]}>
 							{`${formatCurrency(productsDetails?.productMaster?.sellingPrice ?? "0", currency, curreLocale)}`}
 							<Text
-								style={[ 
+								style={[
 									commonStyles.subtitleText,
 									{ color: textColorStyle, fontSize: fontSizes.FONT14 },
 								]}
@@ -1321,7 +1527,7 @@ const ProductDetail = ({ route }) => {
 							>
 								<AddG color={appColors.textColorWhite} height={15} width={15} />
 							</TouchableOpacity>
-							
+
 						</View>
 					}
 					value={

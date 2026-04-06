@@ -1,7 +1,6 @@
 import { Image, Pressable, Text, View, Modal, TouchableOpacity } from 'react-native';
-import React, { useEffect, useState, useCallback } from 'react';
-import { external } from '../../../style/external.css';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import React from 'react';
+import { external } from '../../../style/external.css'; 
 import { useValues } from '../../../../App';
 import H3HeadingCategory from '../../../commonComponents/headingCategory/H3HeadingCategory'; 
 import { FlatList } from 'react-native-gesture-handler'; 

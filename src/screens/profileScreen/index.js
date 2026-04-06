@@ -1,35 +1,34 @@
-import { Image, Pressable, Text, View,Modal } from 'react-native';
-import React, { useEffect, useState,useCallback } from 'react';
+import { Image, Pressable, Text, View, Modal } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
 import { external } from '../../style/external.css';
 import { commonStyles } from '../../style/commonStyle.css';
 import images from '../../utils/images';
 import { profileData } from '../../data/profileData';
 import { RightArrow } from '../../assets/icons/rightArrow';
 import styles from './style.css';
-import { useNavigation,useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useValues } from '../../../App';
 import LinearGradient from 'react-native-linear-gradient';
 import appColors from '../../themes/appColors';
 import { deleteValue, getValue, PREFERENCE_KEY } from '../../utils/helper/localStorage';
 import LoginResponseModel from '../../models/login/loginresponsemodel';
 import HeaderContainer from '../../commonComponents/headingContainer';
-import LoaderScreen from '../loaderScreen';
 import SignIn from '../auth/login';
- 
+
 const ProfileScreen = ({ route }) => {
 
   const { isFrom } = route?.params || {};
 
-  const {  setCustomerUseID } = useValues();
+  const { setCustomerUseID } = useValues();
   const navigation = useNavigation();
 
   const handleLogout = async () => {
     try {
       await deleteValue(PREFERENCE_KEY.USERRESPONSE);
-      await deleteValue(PREFERENCE_KEY.USERTOKEN); 
+      await deleteValue(PREFERENCE_KEY.USERTOKEN);
       await deleteValue(PREFERENCE_KEY.USERCUSTOMERID);
       setCustomerUseID('');
-      
+
       navigation.replace('DrawerScreen');
     } catch (error) {
       console.error('Error logging out:', error);
@@ -38,17 +37,17 @@ const ProfileScreen = ({ route }) => {
 
 
   const [userResponse, setUserResponse] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+  //  React to changes
   useEffect(() => {
-    getUserResponse(); 
+    setIsLoaderLoading(true);
+    const initialize = async () => {
+      getUserResponse();
+    };
+
+    initialize();
   }, []);
 
-useFocusEffect(
-  useCallback(() => {
-    getUserResponse();   // reload API or state
-  }, [])
-);
+
   const getUserResponse = async () => {
     try {
       const jsonValue = await getValue(PREFERENCE_KEY.USERRESPONSE);
@@ -56,16 +55,16 @@ useFocusEffect(
         const parsedData = JSON.parse(jsonValue);
         const setresponse = new LoginResponseModel(parsedData);
 
-        setLoading(false);
+        setIsLoaderLoading(false);
         setUserResponse(setresponse);
 
       }
-      setLoading(false);
+      setIsLoaderLoading(false);
     } catch (e) {
-      setLoading(false);
+      setIsLoaderLoading(false);
       console.error("Fetch error:", e);
     } finally {
-      setLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -77,19 +76,16 @@ useFocusEffect(
     viewRTLStyle,
     textRTLStyle,
     imageRTLStyle,
-    t,
+    t, isLoaderLoading,
+    setIsLoaderLoading,
   } = useValues();
 
   const colors = isDark
     ? ['#43454A', '#24262C']
     : [appColors.screenBg, appColors.screenBg];
 
-  
-  if (loading)
-    return ( <Modal transparent visible={loading}>
-        <LoaderScreen />
-      </Modal>)
-  if (!loading && userResponse)
+
+  if (!isLoaderLoading && userResponse)
     return (
       <View style={[styles.viewContainer, { backgroundColor: bgFullStyle }]}>
         {!isFrom ? <Text
@@ -168,8 +164,8 @@ useFocusEffect(
       </View>
     );
 
-  if (!loading && !userResponse)
-    return (<SignIn/>);
+  if (!isLoaderLoading && !userResponse)
+    return (<SignIn />);
 };
 
 

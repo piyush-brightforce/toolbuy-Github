@@ -205,7 +205,7 @@ const styles1 = StyleSheet.create({
     left: 20,
     right: 20,
     maxHeight: 250,
-    backgroundColor: "white",
+    backgroundColor:  appColors.textColorWhite,
     borderRadius: 6,
     elevation: 5,
     shadowColor: "#000",

@@ -30,7 +30,7 @@ const HeaderContainer = ({ onPress }) => {
 
 			<View style={[external.fd_row, external.ai_center]}>
 				<IconBackground
-					onPress={() => navigation.navigate('ProfileScreen', {
+					onPress={() => navigation.navigate('MyAccountScreen', {
 						isFrom: "Home",
 					})}
 					value={<AccountCircle color={appColors.textColorWhite} />}

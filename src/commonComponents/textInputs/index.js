@@ -24,7 +24,9 @@ const TextInputs = ({
   paddingHorizontalTwo,
   isEditable,
   maxLength,
-  onSubmitEditing
+  onSubmitEditing,
+  rightIcon,
+  secureEntryValue,
 
 }) => {
   const [error, setError] = useState('');
@@ -90,6 +92,7 @@ const TextInputs = ({
                   { width: width },
                   { color: textColorStyle },
                   { textAlign: textRTLStyle },
+                  external.fx_1
                 ]}
                 placeholder={placeHolder}
                 placeholderTextColor={color || appColors.subtitle}
@@ -99,6 +102,7 @@ const TextInputs = ({
   setError('');
 }
                 }}
+                secureTextEntry={secureEntryValue}
                 onFocus={() => setIsFocused(true)}
                 editable={isEditable ?? true}
                 onBlur={handleValidation}
@@ -106,7 +110,7 @@ const TextInputs = ({
                 onSubmitEditing={onSubmitEditing}
               />
 
-              {show && <Pressable style={[external.mh_10]}>{value}</Pressable>}
+              {show && rightIcon}
             </LinearGradient>
           </LinearGradient>
           </TextStackView>

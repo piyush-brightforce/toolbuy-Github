@@ -1,7 +1,7 @@
-import { Text,  TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import React, { useState } from 'react';
 import AuthContainer from '../../../commonComponents/authContainer';
- 
+
 import TextInputs from '../../../commonComponents/textInputs';
 import NavigationButton from '../../../commonComponents/navigationButton';
 import { commonStyles } from '../../../style/commonStyle.css';
@@ -13,13 +13,15 @@ import { Call, Key, RadioBox } from '../../../utils/icon';
 import { useValues } from '../../../../App';
 import axios from 'axios';
 import API_URL from '../../../config/apiConfig';
-import { getValue, PREFERENCE_KEY, setValue } from '../../../utils/helper/localStorage'; 
+import { getValue, PREFERENCE_KEY, setValue } from '../../../utils/helper/localStorage';
 import { useNavigation } from '@react-navigation/native';
 import AuthHeaderContainer from '../authHeaderContainer';
 import { fontSizes, SCREEN_WIDTH } from '../../../themes/appConstant';
 import RadioButton from '../../../commonComponents/radioButton';
-import CheckBox from '../../../commonComponents/checkBox'; 
+import CheckBox from '../../../commonComponents/checkBox';
 import Toast from 'react-native-toast-message';
+import { VisibilityIconG } from '../../../assets/googleIcons/VisibilityIcongG';
+import { VisibilityOffIconG } from '../../../assets/googleIcons/VisibilityOff';
 
 const SignUp = ({ }) => {
 
@@ -45,6 +47,8 @@ const SignUp = ({ }) => {
   const [isBussinessnameTyping, setBussinessnameTyping] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [checkedData, setCheckedData] = useState(false);
+
+  const [secure, setSecure] = useState(true);
   const {
     textRTLStyle,
     iconColorStyle,
@@ -55,14 +59,14 @@ const SignUp = ({ }) => {
 
   const [activeTab, setActiveTab] = useState('Personal Account');
   const signupApiCall = async () => {
- 
+
     try {
 
       setLoading(true);
       const cartId = await getValue(PREFERENCE_KEY.CARTSESSIONID);
       const response = await axios.post(`${API_URL.SIGNUP}`, {
         Account_Type: (!bussinessname || bussinessname === "") ? 0 : 1,
-        BusinessName: (!bussinessname || bussinessname === "") ? "":bussinessname,
+        BusinessName: (!bussinessname || bussinessname === "") ? "" : bussinessname,
         FullName: fullname,
         Email: email,
         Password: password,
@@ -78,15 +82,15 @@ const SignUp = ({ }) => {
         setCustomerUseID(data.Result.CustomerID);
         setLoading(false);
         navigation.replace('DrawerScreen');
-        clearInput(); 
-         Toast.show({
+        clearInput();
+        Toast.show({
           type: 'success',
           text1: 'Success',
           text2: "New user registered successfully",
         });
       } else {
         setLoading(false);
-         Toast.show({
+        Toast.show({
           type: 'error',
           text1: 'Error',
           text2: data.Message,
@@ -97,12 +101,12 @@ const SignUp = ({ }) => {
 
     } catch (error) {
       setLoading(false);
-     setLoading(false);
-         Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: error,
-        });
+      setLoading(false);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error,
+      });
       console.error('Signup failed:', error);
     }
   };
@@ -211,7 +215,7 @@ const SignUp = ({ }) => {
           title={t('transData.signUp')}
           value={
             <View>
-               <Text
+              <Text
                 style={[
                   styles.tabText,
                   styles.tabTextActive,
@@ -370,7 +374,16 @@ const SignUp = ({ }) => {
                   validatePassword();
                   setPwdTyping(false);
                 }}
+                show={true}
+                secureEntryValue={secure}
+                rightIcon={<TouchableOpacity
+                  style={styles.icon}
+                  onPress={() => setSecure(!secure)}
+                >
+                  {secure ? <VisibilityIconG /> : <VisibilityOffIconG />}
+                </TouchableOpacity>}
               />
+
               {passwordError !== '' && (
                 <Text style={styles.errorStyle}>{passwordError}</Text>
               )}
@@ -442,7 +455,7 @@ const SignUp = ({ }) => {
               style={[
                 commonStyles.titleText19,
                 external.ph_5,
-                { color: appColors.primary,fontSize: fontSizes.FONT16 },
+                { color: appColors.primary, fontSize: fontSizes.FONT16 },
               ]}>
               {t('transData.signIn')}
             </Text>
@@ -450,8 +463,8 @@ const SignUp = ({ }) => {
         </View>
 
         {/* Terms conditions and privacy policy view */}
-        <View style={[styles.tandcView, external.mb_10,external.ai_center,external.js_center]}>
-          <Text style={[commonStyles.subtitleText, external.ti_center,{fontSize: fontSizes.FONT13,width: SCREEN_WIDTH/1.4} ]}>
+        <View style={[styles.tandcView, external.mb_10, external.ai_center, external.js_center]}>
+          <Text style={[commonStyles.subtitleText, external.ti_center, { fontSize: fontSizes.FONT13, width: SCREEN_WIDTH / 1.4 }]}>
             {"By signing in to Toolbuy.com, You're agreeing to our "}
             <Text
               style={[
@@ -461,11 +474,12 @@ const SignUp = ({ }) => {
               ]}
               onPress={() => navigation.navigate("WebViewContainer", {
                 url: "https://www.toolbuy.com/policy/terms-conditions",
-              title: "Terms and Conditions" })}
+                title: "Terms and Conditions"
+              })}
             >
               {"Terms and Conditions "}
               <Text
-                style={[commonStyles.subtitleText,{fontSize: fontSizes.FONT13}
+                style={[commonStyles.subtitleText, { fontSize: fontSizes.FONT13 }
                 ]}>
                 {"and "}
                 <Text
@@ -473,7 +487,7 @@ const SignUp = ({ }) => {
                     commonStyles.titleText19,
                     { color: appColors.primary, fontSize: fontSizes.FONT14 },
                   ]}
-                  onPress={() => navigation.navigate("WebViewContainer", { url: "https://www.toolbuy.com/policy/privacy",title: "Privacy Policy" })}
+                  onPress={() => navigation.navigate("WebViewContainer", { url: "https://www.toolbuy.com/policy/privacy", title: "Privacy Policy" })}
                 >
                   {"Privacy Policy"}
                 </Text>

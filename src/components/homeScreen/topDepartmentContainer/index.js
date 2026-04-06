@@ -90,10 +90,7 @@ const TopDepartmentContainer = () => {
           showsVerticalScrollIndicator={false}
         />
       </View>}
-      <BestBrandUnderRoof
-        show={true}
-        showPlus={false}
-      />
+     
     </View>
   );
 };

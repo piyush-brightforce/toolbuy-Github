@@ -7,27 +7,14 @@ import { useValues } from '../../../../../App';
 import { useNavigation } from '@react-navigation/native';
 import IMAGE_CONFIG from '../../../../config/imageConfig';
 import FixedSvgFromUrl from '../../../../commonComponents/customSvgImage/customSvgImage';
-import Brand from '../../../../models/brandmodel';
-import axios from 'axios';
-import API_URL from '../../../../config/apiConfig';
 import appFonts from '../../../../themes/appFonts';
 import ProductHeaderContainer from '../../../../screens/productScreen/productHeaderContainer';
-import appColors from '../../../../themes/appColors';
-import LoaderScreen from '../../../../screens/loaderScreen';
-const ViewAllBestBrandUnderRoof = ({
-    data,
-    width,
-    value,
-    horizontal,
-    numColumns,
-    valueTwo,
-    show,
-}) => {
+const ViewAllBestBrandUnderRoof = () => {
     const {
         isDark,
         t,
-    } = useValues();
-    const [isloading, setisloading] = useState(true);
+        allBrandsData
+    } = useValues(); 
 
     const stripHtml = (html) => {
         if (!html || typeof html !== 'string') {
@@ -39,49 +26,29 @@ const ViewAllBestBrandUnderRoof = ({
             .replace(/&nbsp;/g, ' ')     // remove &nbsp;
             .trim();
     };
-
-    const [brandData, setBrands] = useState([]);
+ 
     const [filterbrandData, setfilterbrandData] = useState([]);
     const navigation = useNavigation();
     const alphabet = ["All", "0-9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 
     const [selectedLetter, setSelectedLetter] = useState(null);
 
-    useEffect(() => {
-        fetchBrandData();
-    }, []);
-
-    const fetchBrandData = async () => {
-        try {
-
-            const response = await axios.get(`${API_URL.GETALLBRANDS}`);
-            const data = response.data;
-            const apiData = data.Result.BrandList.map(item => new Brand(item));
-            setBrands(apiData);
-            setisloading(false);
-
-        } catch (error) {
-            setisloading(false);
-            console.error('Error fetching data:', error);
-        }
-    };
-
     const selectAlphabet = async (item) => { 
         setSelectedLetter(item);
         if (item === "All") {
-            const result = brandData.filter(branditem =>
+            const result = allBrandsData.filter(branditem =>
                 branditem
             );
             setfilterbrandData(result);
         } else if (item === "0-9") {
-            const result = brandData.filter(branditem => {
+            const result = allBrandsData.filter(branditem => {
                 const name = branditem?.name || "";
                 return /^[0-9]/.test(name); // starts with any digit
             });
 
             setfilterbrandData(result);
         } else {
-            const result = brandData.filter(branditem =>
+            const result = allBrandsData.filter(branditem =>
                 branditem.name.toLowerCase().startsWith(item.toLowerCase())
             ); 
             setfilterbrandData(result);
@@ -207,7 +174,7 @@ const ViewAllBestBrandUnderRoof = ({
     );
     return (
         <View style={{ flex: 1 }} >
-            {brandData && (
+            {allBrandsData && (
                 <View style={{ flex: 1 }}>
                     <ProductHeaderContainer
                         type="title"
@@ -221,10 +188,10 @@ const ViewAllBestBrandUnderRoof = ({
                         data={
                             filterbrandData && filterbrandData.length > 0
                                 ? filterbrandData
-                                : brandData
+                                : allBrandsData
                         }
                         numColumns={2}
-                        keyExtractor={(item) => item.id}
+                        keyExtractor={(item, index) => item.id?.toString() || index.toString()}
                         renderItem={renderItem}
                         contentContainerStyle={[external.mb_50, external.mh_10]}
                         columnWrapperStyle={styles.newrow}
@@ -232,9 +199,7 @@ const ViewAllBestBrandUnderRoof = ({
                     />
                 </View>
             )}
-            {isloading && <Modal transparent visible={true}>
-                <LoaderScreen />
-            </Modal>}
+           
         </View>
 
     );

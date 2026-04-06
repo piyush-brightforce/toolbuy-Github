@@ -84,7 +84,7 @@ const SearchingListingContainer = ({ data }) => {
   );
 
   return (
-    data && <View style={{ backgroundColor: 'white' }}>
+    data && <View style={{ backgroundColor: appColors.textColorWhite }}>
 
       <ScrollView
         contentContainerStyle={[external.Pb_80]}

@@ -10,8 +10,7 @@ import { useValues } from '../../../../App';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
-import API_URL from '../../../config/apiConfig';
-import LoaderScreen from '../../loaderScreen';
+import API_URL from '../../../config/apiConfig'; 
 import IMAGE_CONFIG from '../../../config/imageConfig';
 import AddressHeaderContainer from '../addressheaderContainer/addressheaderContainer';
 import appFonts from '../../../themes/appFonts';
@@ -25,8 +24,7 @@ import NavigationButton from '../../../commonComponents/navigationButton';
 const ConfirmOrderScreen = ({ route }) => {
 
   const { orderId } = route.params || {};
-  const navigation = useNavigation();
-  const [pageLoading, setPageLoading] = useState(true);
+  const navigation = useNavigation(); 
 
   const [selectedOrderSummaryExpanded, setSelectedOrderSummaryExpanded] = useState(false);
 
@@ -45,7 +43,9 @@ const ConfirmOrderScreen = ({ route }) => {
     linearColorStyleTwo,
     currency,
     curreLocale,
-    t
+    t,
+    isLoaderLoading,
+    setIsLoaderLoading,
   } = useValues();
 
 
@@ -55,12 +55,15 @@ const ConfirmOrderScreen = ({ route }) => {
 
 
   useEffect(() => {
+    setIsLoaderLoading(true);
     const initialize = async () => {
       if (orderId) {
         // Call API directly
         const encodedID = encodeOrderId(orderId);
         await fetchOrdeDetails(encodedID);
 
+      }else{
+          setIsLoaderLoading(false);
       }
     };
 
@@ -120,13 +123,13 @@ const ConfirmOrderScreen = ({ route }) => {
 
       setOrderHistoryDetails(result?.orderMaster);
       setCartList(result?.orderDetails)
-      setPageLoading(false);
+      setIsLoaderLoading(false);
 
     } catch (error) {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
       console.error("Error fetching data:", error);
     } finally {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -263,7 +266,7 @@ const ConfirmOrderScreen = ({ route }) => {
 
   const orderSummaryItem = ({ item }) => (
     <View>
-      <TouchableOpacity style={[commonStyles.commonContainer, external.m_5, { backgroundColor: 'white' }, external.mt_10]}  >
+      <TouchableOpacity style={[commonStyles.commonContainer, external.m_5, { backgroundColor: appColors.textColorWhite }, external.mt_10]}  >
         <View style={styles.summaryOrderContainer}>
           {item.ProductImagePath?.endsWith('.svg') ? (
             <FixedSvgFromUrl
@@ -290,11 +293,7 @@ const ConfirmOrderScreen = ({ route }) => {
   return (
     <View
       style={[commonStyles.commonContainer, { backgroundColor: appColors.bgLayout }]}>
-      {pageLoading && (
-        <Modal transparent visible={pageLoading}>
-          <LoaderScreen />
-        </Modal>
-      )}
+       
       <AddressHeaderContainer title='' type='title' righticon={false} />
       <View
         style={[
@@ -456,7 +455,7 @@ const ConfirmOrderScreen = ({ route }) => {
                       justifyContent: 'center',
                       alignItems: 'center'
                     }}>
-                      <Text style={{ color: 'white', fontSize: 12 }}>3</Text>
+                      <Text style={{ color: appColors.textColorWhite, fontSize: 12 }}>3</Text>
                     </View>
                   </View>
                   <Text

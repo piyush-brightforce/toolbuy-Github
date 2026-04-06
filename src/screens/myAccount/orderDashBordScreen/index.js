@@ -3,19 +3,16 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { external } from '../../../style/external.css';
 import { profileData, orderDashBoardData } from '../../../data/profileData';
 import styles from './style.css';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useValues } from '../../../../App';
-import LinearGradient from 'react-native-linear-gradient';
 import appColors from '../../../themes/appColors';
 import { deleteValue, getValue, PREFERENCE_KEY } from '../../../utils/helper/localStorage';
-import LoginResponseModel from '../../../models/login/loginresponsemodel';
-import LoaderScreen from '../../loaderScreen';
+import LoginResponseModel from '../../../models/login/loginresponsemodel'; 
 import SignIn from '../../auth/login';
 import ProductHeaderContainer from '../../productScreen/productHeaderContainer';
 import appFonts from '../../../themes/appFonts';
 import { commonStyles } from '../../../style/commonStyle.css';
 import { fontSizes, SCREEN_HEIGHT, SCREEN_WIDTH, windowHeight } from '../../../themes/appConstant';
-import H3HeadingCategory from '../../../commonComponents/headingCategory/H3HeadingCategory';
 import DashboardContainer from '../dashboardContainer';
 import API_URL from '../../../config/apiConfig';
 import axios from 'axios';
@@ -41,7 +38,6 @@ const OrderDashBoardScreen = ({ route }) => {
 
   const { selectedTab } = route?.params || {};
 
-  const { setCustomerUseID } = useValues();
   const navigation = useNavigation();
 
 
@@ -49,7 +45,6 @@ const OrderDashBoardScreen = ({ route }) => {
   const [orderhistoryData, setOrderhistoryData] = useState([]);
 
   const [addressListResponse, setaddressListResponse] = useState([]);
-  const [loading, setLoading] = useState(true);
   const {
     textColorStyle,
     linearColorStyle,
@@ -59,11 +54,11 @@ const OrderDashBoardScreen = ({ route }) => {
     textRTLStyle,
     imageRTLStyle,
     t,
+    isLoaderLoading,
+    setIsLoaderLoading,
   } = useValues();
 
   const [activeTab, setActiveTab] = useState(selectedTab ?? 'Dashboard');
-
-
 
   const [editModal, setEditModal] = useState(false);
   const [editItemValue, setEditItemValue] = useState({});
@@ -105,20 +100,17 @@ const OrderDashBoardScreen = ({ route }) => {
     setSelectedBuyingCompany1(!selectedBuyingCompany1);
   };
 
+  useEffect(() => {
+    setIsLoaderLoading(true);
+    const initialize = async () => { 
+      getUserResponse();
+      fetchOrderHistoryListData();
+      fetchAddressList();
+      fetchPurchaseListingData();
+    };
 
-
-  const colors = isDark
-    ? ['#43454A', '#24262C']
-    : [appColors.screenBg, appColors.screenBg];
-
-
-  useEffect(() => { 
-    getUserResponse();
-    fetchOrderHistoryListData();
-    fetchAddressList();
-    fetchPurchaseListingData();
+    initialize();
   }, []);
-
 
   const validatePhoneNumber = () => {
     if (txtPhoneNumber.length !== 10) {
@@ -153,7 +145,7 @@ const OrderDashBoardScreen = ({ route }) => {
       } else {
 
         setaddAddressModal(false);
-        await addNewAddressApiCall(); 
+        await addNewAddressApiCall();
 
         clearAllTextField();
       }
@@ -176,11 +168,11 @@ const OrderDashBoardScreen = ({ route }) => {
 
     try {
 
-      setLoading(true);
+      setIsLoaderLoading(true);
       // ✅ wait for async value
       const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
       const customerId = Number(id);
- 
+
       const shippingAddressParams = {
         ShippingAddress:
         {
@@ -225,8 +217,8 @@ const OrderDashBoardScreen = ({ route }) => {
       };
 
       const response = await axios.post(API_URL.ADDNEWADDRESS, shippingAddressParams);
- 
-      if (response.data.Success) { 
+
+      if (response.data.Success) {
         await fetchAddressList();
         Toast.show({
           type: 'success',
@@ -234,14 +226,14 @@ const OrderDashBoardScreen = ({ route }) => {
           text2: response?.data?.Message,
         });
       } else {
-        setLoading(false);
+        setIsLoaderLoading(false);
       }
 
     } catch (error) {
-      setLoading(false);
+      setIsLoaderLoading(false);
       console.error("Error fetching data:", error);
     } finally {
-      setLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -250,7 +242,7 @@ const OrderDashBoardScreen = ({ route }) => {
   const handleEditOldAddress = async (item) => {
 
     setEditModal(true);
-    setEditItemValue(item?.item); 
+    setEditItemValue(item?.item);
 
     setTxtfullname(item?.item?.firstName);
     setTxtAddressLine1(item?.item?.address1);
@@ -283,8 +275,8 @@ const OrderDashBoardScreen = ({ route }) => {
 
         setEditModal(false);
 
-        setaddAddressModal(false); 
-        await editAddressApiCall(item); 
+        setaddAddressModal(false);
+        await editAddressApiCall(item);
         clearAllTextField();
       }
     }
@@ -294,10 +286,10 @@ const OrderDashBoardScreen = ({ route }) => {
   const editAddressApiCall = async (item) => {
     try {
 
-      setLoading(true);
+      setIsLoaderLoading(true);
       // ✅ wait for async value 
 
-      
+
       const response = await axios.post(API_URL.EDITOLDADDRESS,
         {
           AddressID: item?.addressID,
@@ -318,20 +310,20 @@ const OrderDashBoardScreen = ({ route }) => {
           IsDelivery: item.isDelivery,
           Landmark: txtLandmark ?? ""
         }
-      ); 
-      if (response.data.Success) { 
+      );
+      if (response.data.Success) {
         await fetchAddressList();
         setEditItemValue({});
 
       } else {
-        setLoading(false);
+        setIsLoaderLoading(false);
       }
 
     } catch (error) {
-      setLoading(false);
+      setIsLoaderLoading(false);
       console.error("Error fetching data:", error);
     } finally {
-      setLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -339,7 +331,7 @@ const OrderDashBoardScreen = ({ route }) => {
 
     try {
 
-      const token = await getValue(PREFERENCE_KEY.USERTOKEN) ?? ''; 
+      const token = await getValue(PREFERENCE_KEY.USERTOKEN) ?? '';
       // ✅ wait for async value 
       const response = await axios.post(API_URL.GETORHISTORY, {
         Token: token,
@@ -348,9 +340,9 @@ const OrderDashBoardScreen = ({ route }) => {
         OrderNumber: 0,
         Email: ''
       });
- 
+
       const orderHistoryModelData = new OrderHistoryListResponse(response.data);
-      if (orderHistoryModelData.success) { 
+      if (orderHistoryModelData.success) {
         setOrderhistoryData(orderHistoryModelData?.result);
       } else {
       }
@@ -364,27 +356,27 @@ const OrderDashBoardScreen = ({ route }) => {
   const removeSelectedAddressApiCall = async (addressId) => {
 
     try {
-      setLoading(true);
-      const token = await getValue(PREFERENCE_KEY.USERTOKEN) ?? ''; 
+      setIsLoaderLoading(true);
+      const token = await getValue(PREFERENCE_KEY.USERTOKEN) ?? '';
       // ✅ wait for async value 
       const response = await axios.post(API_URL.DELETEADDRESS, {
         Token: token,
         AddressID: addressId,
       });
- 
 
-      if (response.data.Success) { 
+
+      if (response.data.Success) {
         await fetchAddressList();
-        setLoading(false);
+        setIsLoaderLoading(false);
       } else {
-        setLoading(false);
+        setIsLoaderLoading(false);
       }
 
     } catch (error) {
       console.error("Error fetching data:", error);
-      setLoading(false);
+      setIsLoaderLoading(false);
     } finally {
-      setLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -392,30 +384,30 @@ const OrderDashBoardScreen = ({ route }) => {
   const chooseAddressApiCall = async (adressid, type) => {
     try {
 
-      setLoading(true);
+      setIsLoaderLoading(true);
       // ✅ wait for async value
       const token = await getValue(PREFERENCE_KEY.USERTOKEN);
- 
+
 
       if (!token) {
-        setLoading(false);
+        setIsLoaderLoading(false);
         return;
       }
       const response = await axios.post(type === "Billing" ? API_URL.SETPRIMARYADDRESS : API_URL.SETDELIVERYADDRESS, {
         Token: token,
         AddressID: adressid
-      }); 
+      });
       if (response.data.Success) {
         await fetchAddressList();
       } else {
-        setLoading(false);
+        setIsLoaderLoading(false);
       }
 
     } catch (error) {
-      setLoading(false);
+      setIsLoaderLoading(false);
       console.error("Error fetching data:", error);
     } finally {
-      setLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
@@ -425,13 +417,13 @@ const OrderDashBoardScreen = ({ route }) => {
 
       // ✅ wait for async value
       const token = await getValue(PREFERENCE_KEY.USERTOKEN);
- 
+
       if (!token) {
         return;
       }
       const response = await axios.post(API_URL.GETADDRESSLIST, {
         Token: token
-      }); 
+      });
       const cartListModelData = new AddressResponse(response.data);
       const result = cartListModelData.result ?? [];
 
@@ -448,10 +440,10 @@ const OrderDashBoardScreen = ({ route }) => {
 
     try {
 
-      const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID); 
+      const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
       const customerUserID = Number(id);
       const cartid = await getValue(PREFERENCE_KEY.CARTSESSIONID);
-       
+
 
       const response = await axios.post(`${API_URL.GETPURCHASELIST}`,
         {
@@ -464,10 +456,10 @@ const OrderDashBoardScreen = ({ route }) => {
 
       const model = new PurchaseListResponse(data);
       setPurchaseList(model.result);
-      setLoading(false);
+      setIsLoaderLoading(false);
 
     } catch (error) {
-      setLoading(false);
+      setIsLoaderLoading(false);
       console.error('Error fetching data:', error);
     }
   };
@@ -477,9 +469,9 @@ const OrderDashBoardScreen = ({ route }) => {
   const deletePurchaseListingData = async (productId, purchasemasterid) => {
 
     try {
-      setLoading(true);
+      setIsLoaderLoading(true);
 
-      const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID); 
+      const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
       const customerUserID = Number(id);
       const cartid = await getValue(PREFERENCE_KEY.CARTSESSIONID);
 
@@ -495,12 +487,12 @@ const OrderDashBoardScreen = ({ route }) => {
       const data = response.data;
       if (data.Success) {
         await fetchPurchaseListingData();
-      }else{
-        setLoading(false);
+      } else {
+        setIsLoaderLoading(false);
       }
 
     } catch (error) {
-      setLoading(false);
+      setIsLoaderLoading(false);
       console.error('Error fetching data:', error);
     }
   };
@@ -512,26 +504,21 @@ const OrderDashBoardScreen = ({ route }) => {
         const parsedData = JSON.parse(jsonValue);
         const setresponse = new LoginResponseModel(parsedData);
 
-        setLoading(false);
+        setIsLoaderLoading(false);
         setUserResponse(setresponse);
 
       }
-      setLoading(false);
+      setIsLoaderLoading(false);
     } catch (e) {
-      setLoading(false);
+      setIsLoaderLoading(false);
       console.error("Fetch error:", e);
     } finally {
-      setLoading(false);
+      setIsLoaderLoading(false);
     }
   };
 
 
-  if (loading)
-    return (<Modal transparent visible={loading}>
-      <LoaderScreen />
-    </Modal>)
-
-  if (!loading && userResponse)
+  if (!isLoaderLoading && userResponse)
     return (
       <View style={[external.fx_1, { backgroundColor: appColors.bgLayout }]}>
         <ProductHeaderContainer title={activeTab} type={'title'} righticon={false} onPress={() => navigation.goBack()} />
@@ -557,7 +544,7 @@ const OrderDashBoardScreen = ({ route }) => {
 
               return (
                 <TouchableOpacity
-                key={item?.id.toString()}
+                  key={item?.id.toString()}
                   style={[
                     styles.tab, {
                       borderBottomWidth: activeTab === item.title ? 3 : 0, borderBottomColor: appColors.primary,
@@ -565,22 +552,22 @@ const OrderDashBoardScreen = ({ route }) => {
                   ]}
                   onPress={async () => {
                     setActiveTab(item.title);
-                    if(item.title === "Dashboard"){
+                    if (item.title === "Dashboard") {
 
                       await fetchOrderHistoryListData();
 
-                    }else if(item.title === "Order History"){
+                    } else if (item.title === "Order History") {
 
                       await fetchOrderHistoryListData();
 
-                    }else if(item.title === "Addressess"){
+                    } else if (item.title === "Addressess") {
 
                       await fetchAddressList();
 
-                    }else if(item.title === "Purchase List"){
+                    } else if (item.title === "Purchase List") {
 
                       await fetchPurchaseListingData();
-                    }else if(item.title === "Profile"){
+                    } else if (item.title === "Profile") {
                       await getUserResponse();
                     }
                   }}>
@@ -605,10 +592,10 @@ const OrderDashBoardScreen = ({ route }) => {
         {activeTab === "Dashboard" && <ScrollView>
           <View style={[styles.viewContainer, external.fx_1]}>
             <DashboardContainer orderHistoryData={orderhistoryData} userData={userResponse} addressData={addressListResponse} onTapViewAllOrder={(val) => {
-           
+
               setActiveTab('Order History');
             }} oncallDefaultAddress={(val) => {
-              
+
               setActiveTab('Addressess');
             }} />
           </View>
@@ -623,14 +610,14 @@ const OrderDashBoardScreen = ({ route }) => {
         {activeTab === "Addressess" && <ScrollView  >
           <View style={[styles.viewContainer, external.fx_1]}>
             <DashboardAddressListContainer addressesData={addressListResponse} oncallReturnAddressTag={(val) => {
-             
+
               if (val.tag === "Edit") {
                 handleEditOldAddress(val?.item);
               } else {
                 removeSelectedAddressApiCall(val?.item?.item?.addressID);
               }
             }}
-              oncallReturnDefaultAddressTag={(val) => { 
+              oncallReturnDefaultAddressTag={(val) => {
                 chooseAddressApiCall(val?.item?.item?.addressID, val?.tag);
               }} />
           </View>
@@ -639,7 +626,7 @@ const OrderDashBoardScreen = ({ route }) => {
         {activeTab === "Purchase List" && <ScrollView  >
           <View style={[styles.viewContainer, external.fx_1]}>
             <PurchaseListContainer purchaseList={purchaseList?.purchaseList} purchaseListProduct={purchaseList?.purchaseListProduct} oncallReturnDeletTag={(val) => {
-           
+
               deletePurchaseListingData(val?.productId, val?.productListId);
             }} />
           </View>
@@ -1122,7 +1109,7 @@ const OrderDashBoardScreen = ({ route }) => {
       </View>
     );
 
-  if (!loading && !userResponse)
+  if (!isLoaderLoading && !userResponse)
     return (<SignIn />);
 };
 

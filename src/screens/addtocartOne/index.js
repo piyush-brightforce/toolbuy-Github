@@ -1,22 +1,19 @@
 import { View, Text, ScrollView, TouchableOpacity, Modal, TouchableWithoutFeedback, Image, Animated } from 'react-native';
 import { external } from '../../style/external.css';
 import { commonStyles } from '../../style/commonStyle.css';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { CheckOutIcon } from '../../utils/icon';
+import { useNavigation } from '@react-navigation/native';
 import styles from './style.css';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import InmyBegContainer from '../../components/InmyBegContainer';
 import SubtotalContainer from '../../commonComponents/subTotal';
 import BottomContainer from '../../commonComponents/bottomContainer';
 import { fontSizes, windowHeight } from '../../themes/appConstant';
-import VoucherCard from '../../components/voucherCord';
 import { useValues } from '../../../App';
 import axios from 'axios';
 import API_URL from '../../config/apiConfig';
 import { getValue, PREFERENCE_KEY, setValue } from '../../utils/helper/localStorage';
 import { ShoppingCartResponse } from '../../models/cart/cartmodel';
 import ProductHeaderContainer from '../productScreen/productHeaderContainer';
-import LoaderScreen from '../loaderScreen';
 import CartListItemContainer from './cartItem';
 import appFonts from '../../themes/appFonts';
 import LoginResponseModel from '../../models/login/loginresponsemodel';
@@ -33,11 +30,10 @@ const AddtocartOne = ({ route }) => {
   const { isFrom } = route?.params || {};
   const navigation = useNavigation();
 
-  const { bgFullStyle, t, currSymbol, currPrice, textColorStyle, customerUserID, settotalCartItem,currency,curreLocale } = useValues();
+  const { bgFullStyle, t, currSymbol, currPrice, textColorStyle, customerUserID, settotalCartItem, currency, curreLocale, setIsLoaderLoading, isLoaderLoading } = useValues();
 
   const [cartListResponse, setcartListResponse] = useState([]);
   const [cartMasterResponse, setcartMasterResponse] = useState();
-  const [pageLoading, setPageLoading] = useState(true); 
   const [loadingProductId, setLoadingProductId] = useState(null);
   const [visible, setVisible] = useState(false);
   const slideAnim = useRef(new Animated.Value(300)).current;
@@ -61,17 +57,15 @@ const AddtocartOne = ({ route }) => {
     }).start(() => setVisible(false));
   };
 
-  useEffect(() => { 
-    getUserResponse();
-    fetchCartList();
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
+  useEffect(() => {
+    setIsLoaderLoading(true);
+    const initialize = async () => {
       getUserResponse();
-      fetchCartList();// reload API or state
-    }, [])
-  );
+      await fetchCartList();
+    };
+
+    initialize();
+  }, []);
 
 
   const fetchCartList = async () => {
@@ -83,32 +77,32 @@ const AddtocartOne = ({ route }) => {
       const cartid = await getValue(PREFERENCE_KEY.CARTSESSIONID);
 
       const customerUserID = Number(id);
- 
+
 
       const response = await axios.post(API_URL.GETSHOPPINGCART, {
         CustomerID: customerUserID,
         CartSessionID: (!customerUserID || customerUserID === 0) ? cartid ?? "" : "",
-      }); 
+      });
       const cartListModelData = new ShoppingCartResponse(response.data);
       if (cartListModelData.success) {
         const result = response.data.Result.ShoppingCartList.length ?? 0;
         settotalCartItem(cartListModelData.shoppingCartMaster.totalItems ?? 0);
-      
+
         setcartListResponse(cartListModelData?.shoppingCartList);
         setcartMasterResponse(cartListModelData?.shoppingCartMaster);
-        setPageLoading(false);
+        setIsLoaderLoading(false);
         setLoadingProductId(null);
       } else {
-        setPageLoading(false);
+        setIsLoaderLoading(false);
         setLoadingProductId(null);
       }
 
     } catch (error) {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
       setLoadingProductId(null);
       console.error("Error fetching data:", error);
     } finally {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
       setLoadingProductId(null);
     }
   };
@@ -131,15 +125,15 @@ const AddtocartOne = ({ route }) => {
 
   const updateQuantity = async (productId, flag) => {
 
-    
-    try { 
+
+    try {
       setLoadingProductId(productId);
       // ✅ wait for async value
       const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
 
       const customerUserID = Number(id);
       const cartId = await getValue(PREFERENCE_KEY.CARTSESSIONID);
- 
+
       if (!customerUserID || customerUserID === 0) {
         const response = await axios.post(API_URL.UPDATESHOPPINGCART, {
           ProductID: productId,
@@ -151,13 +145,13 @@ const AddtocartOne = ({ route }) => {
           Zipcode: '',
           Flag: flag,
           VariationID: 0
-        }); 
+        });
 
         const result = new CartResponse(response.data);
 
 
         if (result.success) {
-          
+
           if (!cartId || cartId == "") {
             await setValue(
               PREFERENCE_KEY.CARTSESSIONID,
@@ -167,8 +161,8 @@ const AddtocartOne = ({ route }) => {
 
           await fetchCartList();
         } else {
-          setPageLoading(false);
-        setLoadingProductId(null);
+          setIsLoaderLoading(false);
+          setLoadingProductId(null);
         }
       } else {
         const response = await axios.post(API_URL.UPDATESHOPPINGCART, {
@@ -181,18 +175,18 @@ const AddtocartOne = ({ route }) => {
           Zipcode: '',
           Flag: flag,
           VariationID: 0
-        }); 
+        });
         const result = response.data;
-        if (result.Success) { 
+        if (result.Success) {
           await fetchCartList();
         } else {
-          setPageLoading(false);
-         setLoadingProductId(null);
+          setIsLoaderLoading(false);
+          setLoadingProductId(null);
         }
       }
 
     } catch (error) {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
       setLoadingProductId(null);
       console.error("Error fetching data1:", error);
     }
@@ -201,42 +195,42 @@ const AddtocartOne = ({ route }) => {
   const daleteCartItem = async (shoppingCartId) => {
 
     try {
- 
 
-      setPageLoading(true);
+
+      setIsLoaderLoading(true);
       // ✅ wait for async value
       const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
 
       const customerUserID = Number(id);
- 
+
 
       const cartid = await getValue(PREFERENCE_KEY.CARTSESSIONID);
       const response = await axios.post(API_URL.DELETESHOPINGCART, {
         ShoppingCartID: shoppingCartId,
         CustomerID: customerUserID,
         CartSessionID: (!customerUserID || customerUserID === 0) ? cartid || '' : '',
-      }); 
+      });
       const result = response.data;
-      if (result.Success) { 
+      if (result.Success) {
         await fetchCartList();
       } else {
-        setPageLoading(false);
+        setIsLoaderLoading(false);
         setLoadingProductId(null);
       }
     } catch (error) {
-      setPageLoading(false);
+      setIsLoaderLoading(false);
       setLoadingProductId(null);
       console.error("Error fetching data1:", error);
     }
   };
 
 
-  const handleQuantityChange = (data) => { 
+  const handleQuantityChange = (data) => {
     updateQuantity(data.productId, data.action);
   };
 
 
-  const handleRemoveCart = (data) => { 
+  const handleRemoveCart = (data) => {
     daleteCartItem(data)
   };
 
@@ -253,10 +247,7 @@ const AddtocartOne = ({ route }) => {
   return (
     <View style={{ flex: 1 }}>
 
-      {pageLoading && <Modal transparent visible={true}>
-        <LoaderScreen />
-      </Modal>}
-      {(!pageLoading && cartListResponse && cartListResponse.length > 0) && <View
+      {(!isLoaderLoading && cartListResponse && cartListResponse.length > 0) && <View
         style={[commonStyles.commonContainer, { backgroundColor: bgFullStyle, flex: 1 }]}>
         {!isFrom ? <ProductHeaderContainer righticon={false} type="search" title={t('transData.myBeg')} /> : <ProductHeaderContainer righticon={false} type="search" title={t('transData.myBeg')} onPress={() => navigation.goBack('')} />}
 
@@ -294,8 +285,8 @@ const AddtocartOne = ({ route }) => {
                   </View>
                 </TouchableOpacity>
 
-                <Text style={[styles.textContainer, { color: textColorStyle, paddingLeft: 10 }]}> 
-                  {`${formatCurrency(cartMasterResponse?.totalOrder  ?? "0", currency, curreLocale)}`}
+                <Text style={[styles.textContainer, { color: textColorStyle, paddingLeft: 10 }]}>
+                  {`${formatCurrency(cartMasterResponse?.totalOrder ?? "0", currency, curreLocale)}`}
 
                 </Text>
               </View>
@@ -304,7 +295,7 @@ const AddtocartOne = ({ route }) => {
               <TouchableOpacity style={styles.checkoutBtn} onPress={() => {
                 setVisible(false);
                 userResponse ? navigation.navigate('AddressScreen', { cartList: cartListResponse, cartResponse: cartMasterResponse }) : navigation.navigate('Login');
-              }}> 
+              }}>
                 <Text style={[styles.checkOut]}>{t('transData.CHECKOUT')}</Text>
               </TouchableOpacity>
             }
@@ -313,7 +304,7 @@ const AddtocartOne = ({ route }) => {
         </View>
       </View>}
 
-      {(!pageLoading && cartListResponse.length === 0) && <View
+      {(!isLoaderLoading && cartListResponse.length === 0) && <View
         style={[commonStyles.commonContainer, { backgroundColor: bgFullStyle, flex: 1 }]}>
         {!isFrom ? <ProductHeaderContainer righticon={false} type="search" title={t('transData.myBeg')} /> : <ProductHeaderContainer righticon={false} type="search" title={t('transData.myBeg')} onPress={() => navigation.goBack('')} />}
 
@@ -356,10 +347,10 @@ const AddtocartOne = ({ route }) => {
 
             {/* Rows */}
             {renderRow("Total Amount", `${formatCurrency((cartMasterResponse?.totalPrice) ?? "0", currency, curreLocale)}`)}
-            
+
             {renderRow(t("transData.GST"), `${formatCurrency((cartMasterResponse?.gstPrice) ?? "0", currency, curreLocale)}`)}
-            {renderRow(t("transData.SHIPPING"), !cartMasterResponse?.isShippingFree ? `${formatCurrency((cartMasterResponse?.shippingCharge) ?? "0", currency, curreLocale)}` :"FREE", cartMasterResponse?.isShippingFree && true)}
-            {renderRow(t("transData.ROUND_OFF"),`${formatCurrency((Math.abs(cartMasterResponse?.roundOff)) ?? "0", currency, curreLocale)}`)}
+            {renderRow(t("transData.SHIPPING"), !cartMasterResponse?.isShippingFree ? `${formatCurrency((cartMasterResponse?.shippingCharge) ?? "0", currency, curreLocale)}` : "FREE", cartMasterResponse?.isShippingFree && true)}
+            {renderRow(t("transData.ROUND_OFF"), `${formatCurrency((Math.abs(cartMasterResponse?.roundOff)) ?? "0", currency, curreLocale)}`)}
 
           </View>
           {/* Footer */}
@@ -376,8 +367,8 @@ const AddtocartOne = ({ route }) => {
                   </View>
                 </TouchableOpacity>
 
-                <Text style={[styles.textContainer, { color: textColorStyle, paddingLeft: 10 }]}> 
-                   {`${formatCurrency(((cartMasterResponse?.totalOrder ?? 0)) ?? "0", currency, curreLocale)}`}
+                <Text style={[styles.textContainer, { color: textColorStyle, paddingLeft: 10 }]}>
+                  {`${formatCurrency(((cartMasterResponse?.totalOrder ?? 0)) ?? "0", currency, curreLocale)}`}
 
                 </Text>
               </View>
@@ -386,7 +377,7 @@ const AddtocartOne = ({ route }) => {
               <TouchableOpacity style={styles.checkoutBtn} onPress={() => {
                 setVisible(false);
                 userResponse ? navigation.navigate('AddressScreen', { cartList: cartListResponse, cartResponse: cartMasterResponse }) : navigation.navigate('Login');
-              }}> 
+              }}>
                 <Text style={[styles.checkOut]}>{t('transData.CHECKOUT')}</Text>
               </TouchableOpacity>
             }

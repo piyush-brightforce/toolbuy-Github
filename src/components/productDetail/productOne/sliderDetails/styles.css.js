@@ -1,5 +1,6 @@
 import {StyleSheet} from 'react-native';
 import {fontSizes, windowHeight} from '../../../../themes/appConstant';
+import appColors from '../../../../themes/appColors';
 
 export const sliderStyles = StyleSheet.create({
   container: {
@@ -46,7 +47,7 @@ export const sliderStyles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   sliderItemSelected: {
-    backgroundColor: 'white',
+    backgroundColor: appColors.textColorWhite,
     height: 50,
     width: 55,
     alignItems: 'center',

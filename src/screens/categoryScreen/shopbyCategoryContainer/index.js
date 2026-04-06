@@ -43,40 +43,39 @@ const ShopByCategoryContainer = (data) => {
       <TouchableOpacity
         style={[
           commonStyles.commonContainer,
-          external.m_5,
-          { backgroundColor: "white" },
+          external.m_5, 
           external.mt_10,
         ]}
         onPress={() =>
-          item.filterCode &&
+          item.categoryCode &&
           navigation.navigate("ProductListing", {
             item: {
-              title: item.filterCode,
+              title: item.categoryCode,
               url: "",
-              parentCat: item.filterCode,
+              parentCat: item.categoryCode,
               filterKey: "",
-              categoryName: item.filterValue,
+              categoryName: item.categoryName,
               filterTitle: ''
             },
           })
         }
       >
-        {item.filterImagePath ? (
+        {item.imagePath ? (
           <View style={styles.iconContainer}>
-            {item.filterImagePath?.endsWith(".svg") ? (
+            {item.imagePath?.endsWith(".svg") ? (
               <FixedSvgFromUrl
                 width={SCREEN_WIDTH * 0.27}
                 height={SCREEN_WIDTH * 0.27}
-                uri={`${IMAGE_CONFIG.BASE_URL}/${item.filterImagePath}`}
+                uri={`${IMAGE_CONFIG.BASE_URL}/${item.imagePath}`}
               />
             ) : (
               <Image
                 source={
                   imgError ||
-                  !item.filterImagePath ||
-                  item.filterImagePath === "noimage.jpg"
+                  !item.imagePath ||
+                  item.imagePath === "noimage.jpg"
                     ? require("../../../assets/images/homeScreenOne/placeholder.jpeg")
-                    : { uri: `${IMAGE_CONFIG.BASE_URL}/${item.filterImagePath}` }
+                    : { uri: `${IMAGE_CONFIG.BASE_URL}/${item.imagePath}` }
                 }
                 style={styles.sidebarImage}
                 onError={() => setImgError(true)}
@@ -98,7 +97,7 @@ const ShopByCategoryContainer = (data) => {
             [external.Pb_5, external.pt_5],
           ]}
         >
-          {item.filterValue}
+          {item.categoryName}
         </Text>
       </TouchableOpacity>
     </View>
@@ -118,6 +117,7 @@ const ShopByCategoryContainer = (data) => {
       {data && <View style={[external.mh_10]}>
 
         <FlatList
+       
           data={formatData(data.data, 3)}
           renderItem={({ item }) => (
     <CategoryItem

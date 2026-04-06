@@ -20,6 +20,12 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		zIndex: 999,
 	},
+	errorStyle: {
+		color: appColors.red,
+		marginBottom: windowHeight(4),
+		fontFamily: appFonts.bold,
+		fontSize: fontSizes.FONT17,
+	  },
 	brandText: {
 		...commonStyles.titleText19,
 		fontSize: fontSizes.FONT18,

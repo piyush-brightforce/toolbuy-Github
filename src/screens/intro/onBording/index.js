@@ -60,7 +60,7 @@ const OnboardingSlide = ({
                   <Text style={[commonStyles.subtitleText, styles.nextText]}>
                     {isLastSlide ? 'Go to Home' : 'Next'}
                   </Text>
-                  <LeftSideArrow color={'white'} />
+                  <LeftSideArrow color={appColors.textColorWhite} />
                 </View>
               </TouchableOpacity>
             }
@@ -118,8 +118,8 @@ const Onboarding = ({navigation}) => {
                 imageSource={imageSource}
                 onNextPress={handleNextPress}
                 isLastSlide={index === slides.length - 1}
-                backgroundColor={isDark ? '#1A1C22' : 'white'}
-                color={isDark ? 'white' : appColors.primary}
+                backgroundColor={isDark ? '#1A1C22' : appColors.textColorWhite}
+                color={isDark ? appColors.textColorWhite : appColors.primary}
                 onPress={() => navigation.navigate('Login')}
               />
             ))}

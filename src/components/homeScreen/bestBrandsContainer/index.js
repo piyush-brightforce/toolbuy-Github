@@ -12,15 +12,7 @@ import Brand from '../../../models/brandmodel';
 import axios from 'axios';
 import API_URL from '../../../config/apiConfig'; 
 import appFonts from '../../../themes/appFonts';
-const BestBrandUnderRoof = ({
-  data,
-  width,
-  value,
-  horizontal,
-  numColumns,
-  valueTwo,
-  show,
-}) => {
+const BestBrandUnderRoof = ( ) => {
   const {
     isDark,
     t,
@@ -150,11 +142,11 @@ const BestBrandUnderRoof = ({
   );
   return (
     <View>
-      {brandData && show && (
+      {brandData && (
         <View style={[external.mh_20, external.mt_10]}>
           <H3HeadingCategory
             value={t('transData.bestBrandUnderRoof')}
-            seeall={valueTwo || t('transData.seeAll')}
+            seeall={t('transData.seeAll')}
             onpressViewall={()=> navigation.navigate('ViewAllBestBrand')}
           />
         </View>
