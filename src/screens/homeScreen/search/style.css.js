@@ -7,8 +7,7 @@ import appColors from '../../../themes/appColors';
 const styles = StyleSheet.create({
 	container: {
 		...external.fd_row,
-		...external.ai_center,
-		marginTop: windowHeight(10),
+		...external.ai_center, 
 		borderRadius: windowHeight(40), 
 		marginRight: windowHeight(16),
 		padding: 1,

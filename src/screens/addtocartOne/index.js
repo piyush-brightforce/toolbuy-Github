@@ -24,6 +24,7 @@ import CartResponse from '../../models/cart/cartresponse';
 import { ArrowDown } from '../../assets/googleIcons/arrowDown';
 import { ArrowUp } from '../../assets/googleIcons/ArrowUp';
 import { formatCurrency } from '../../style/rtlStyle';
+import SolidLine from '../../commonComponents/solidLine';
 
 const AddtocartOne = ({ route }) => {
 
@@ -196,13 +197,11 @@ const AddtocartOne = ({ route }) => {
 
     try {
 
-
       setIsLoaderLoading(true);
       // ✅ wait for async value
       const id = await getValue(PREFERENCE_KEY.USERCUSTOMERID);
 
       const customerUserID = Number(id);
-
 
       const cartid = await getValue(PREFERENCE_KEY.CARTSESSIONID);
       const response = await axios.post(API_URL.DELETESHOPINGCART, {
@@ -224,19 +223,18 @@ const AddtocartOne = ({ route }) => {
     }
   };
 
-
   const handleQuantityChange = (data) => {
     updateQuantity(data.productId, data.action);
   };
-
 
   const handleRemoveCart = (data) => {
     daleteCartItem(data)
   };
 
-
-  const renderRow = (label, value, isGreen = false) => (
-    <View style={styles.row} key={label}>
+  const renderRow = (label, value, isGreen = false,borderBottomWidth = 0.5) => (
+    <View style={[styles.row,{
+    borderBottomWidth: borderBottomWidth,
+    borderColor: '#ddd',}]} key={label}>
       <Text style={[commonStyles.subtitleText, { color: textColorStyle }]}>{label}</Text>
       <Text style={[commonStyles.subtitleText, { color: isGreen ? 'green' : textColorStyle }]}>
         {value}
@@ -256,23 +254,15 @@ const AddtocartOne = ({ route }) => {
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: windowHeight(70) }}>
-            {/*            
-        <LocationContainer
-          borderColor={appColors.bgLayer}
-          backgroundColor={appColors.bgLayout}
-          locationBg={'rgba(77, 102, 255, 0.10)'}
-          borderRadius={windowHeight(6)}
-          value={<Text style={styles.changeText}>{change}</Text>}
-          navigation={navigation}
-        /> */}
             {cartListResponse.length > 0 && <InmyBegContainer productlength={cartListResponse.length} />}
             <CartListItemContainer loadingProductId={loadingProductId} data={cartListResponse} onSendData={handleQuantityChange} onRemoveCart={handleRemoveCart} />
-
+             <SubtotalContainer data={cartMasterResponse} itemlength={cartListResponse.length} />
+         
             {/* <VoucherCard /> */}
-            <SubtotalContainer data={cartMasterResponse} />
           </ScrollView>
         </View>
         <View style={styles.bottomContainerView}>
+           
           <BottomContainer
             leftValue={
               <View>
@@ -339,18 +329,20 @@ const AddtocartOne = ({ route }) => {
           {/* Header */}
           <View style={{ padding: 20 }}>
             <View style={styles.header}>
-              <Text style={[styles.textContainer, { fontSize: fontSizes.FONT17, fontFamily: appFonts.bold }]}>Order Summary</Text>
+              <Text style={[styles.textContainer, { fontSize: fontSizes.FONT17, fontFamily: appFonts.bold }]}>Order Summary ({cartListResponse.length})</Text>
               <TouchableOpacity onPress={closeSheet}>
                 <Text style={[styles.textContainer, { fontSize: fontSizes.FONT20 }]}>✕</Text>
               </TouchableOpacity>
             </View>
-
+            <SolidLine/>
             {/* Rows */}
             {renderRow("Total Amount", `${formatCurrency((cartMasterResponse?.totalPrice) ?? "0", currency, curreLocale)}`)}
-
+           
             {renderRow(t("transData.GST"), `${formatCurrency((cartMasterResponse?.gstPrice) ?? "0", currency, curreLocale)}`)}
+             
             {renderRow(t("transData.SHIPPING"), !cartMasterResponse?.isShippingFree ? `${formatCurrency((cartMasterResponse?.shippingCharge) ?? "0", currency, curreLocale)}` : "FREE", cartMasterResponse?.isShippingFree && true)}
-            {renderRow(t("transData.ROUND_OFF"), `${formatCurrency((Math.abs(cartMasterResponse?.roundOff)) ?? "0", currency, curreLocale)}`)}
+             
+            {renderRow(t("transData.ROUND_OFF"), `${formatCurrency((Math.abs(cartMasterResponse?.roundOff)) ?? "0", currency, curreLocale)}`,false,0)}
 
           </View>
           {/* Footer */}

@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   removeText: {
     ...commonStyles.titleText19,
     color: appColors.primary,
-    fontSize: fontSizes.FONT17,
+    fontSize: fontSizes.FONT18,
   },
   deleteText: {
     width: windowWidth(215),
@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
   defaulTextView: {
     ...commonStyles.subtitleText,
     ...external.mh_5,
+    fontSize:appFonts.font17,
     color: appColors.titleText,
     flexGrow: 1,
   },
@@ -137,13 +138,13 @@ overlay: {
   },
   textContainer1: {
     ...commonStyles.H1Banner,
-    fontSize: fontSizes.FONT20,
+    fontSize: fontSizes.FONT18,
     color: appColors.titleText,
     fontFamily: appFonts.regular
   },
   textContainer: {
     ...commonStyles.H1Banner,
-    fontSize: fontSizes.FONT20,
+    fontSize: fontSizes.FONT19,
     color: appColors.titleText,
     fontFamily: appFonts.bold
   },

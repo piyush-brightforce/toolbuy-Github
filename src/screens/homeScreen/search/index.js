@@ -1,6 +1,6 @@
 import { TextInput, View, Keyboard, Pressable } from 'react-native';
 import React, { useState, useRef, useCallback } from 'react';
-import { SearchIconG, ChevronLeft, Drawer } from '../../../utils/icon';
+import { SearchIconG, ChevronLeft, Drawer, Cross } from '../../../utils/icon';
 import styles from './style.css';
 import appColors from '../../../themes/appColors';
 import SearhcResultResponse from '../../../models/searchAutoComplete/searchResult';
@@ -40,7 +40,7 @@ const SearchingScreen = ({ route }) => {
     const navigation = useNavigation();
     const [searchText, setSearchText] = useState('');
 
-    const [loading, setLoading] = useState(false);
+    const [isFocused, setIsFocused] = useState(false); 
     const { linearColorStyle, linearColorStyleTwo, textRTLStyle, viewRTLStyle, imageRTLStyle, t, iconColorStyle } =
         useValues();
 
@@ -48,26 +48,23 @@ const SearchingScreen = ({ route }) => {
     const [searchingResult, setSearchingResult] = useState();
 
 
-    const searchingapiData = async () => { 
+    const searchingapiData = async (text) => { 
         try {
-
-            setLoading(true);
+ 
             const response = await axios.post(`${API_URL.SEARCHAUTOCOMPLETE}`, {
-                Keyword: searchText
+                Keyword: text
             });
             const data = response.data;
             const searchResult = new SearhcResultResponse(data); // convert JSON → model
-            setSearchingResult(searchResult);
-            setLoading(false);
+            setSearchingResult(searchResult); 
 
-        } catch (error) {
-            setLoading(false);
+        } catch (error) { 
             console.error('Error fetching data:', error);
         }
     };
 
     const handleSearch = (text) => { 
-        searchingapiData();
+        searchingapiData(text);
     };
 
     return (
@@ -83,7 +80,7 @@ const SearchingScreen = ({ route }) => {
                             <View style={[styles.searchContainer]}>
                                <TextInput
                                         ref={inputRef}
-                                        placeholder={t("transData.SEARCH_PLACEHOLDER")}
+                                        placeholder={"What are you looking for today?"}
                                         placeholderTextColor={appColors.subtitle}
                                         style={[
                                             styles.searchText,
@@ -93,20 +90,41 @@ const SearchingScreen = ({ route }) => {
                                         value={searchText}
                                         onChangeText={(text) => {
                                             setSearchText(text);
-                                            // sendDataBack(text ?? "");
                                             handleSearch(text ?? "");
                                         }}
 
+                                        onFocus={() => setIsFocused(true)}
+                                        onBlur={() => setIsFocused(false)}
+
                                         onSubmitEditing={handleSearch}  // 👈 press keyboard search
                                         returnKeyType="search"
+                                        
                                     />
                             </View>
+                            {isFocused && <View style={[external.mr_5]}>
+                                <TouchableOpacity>
+                                <Cross height={28} width={28} color={iconColorStyle.color} onPress={() => {
+                                    setSearchText('');
+                                    setSearchingResult(null);
+                                    handleSearch("");
+                                    inputRef.current?.blur();
+                                    Keyboard.dismiss();
+                                }} />
+                            </TouchableOpacity>
+                            </View>}
 
-                            <View style={styles.containerView}>
+                            <TouchableOpacity onPress={() => {
+                                if (searchText) {
+                                    handleSearch(searchText);
+                                    inputRef.current?.blur();
+                                    Keyboard.dismiss();
+                                }}}>
+                                <View style={styles.containerView}>
                                 <View style={styles.searchIconStyle}>
                                     <SearchIconG />
                                 </View>
                             </View>
+                            </TouchableOpacity>
                         </View>
                     </View>
 

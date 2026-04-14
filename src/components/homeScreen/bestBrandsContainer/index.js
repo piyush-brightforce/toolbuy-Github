@@ -12,6 +12,7 @@ import Brand from '../../../models/brandmodel';
 import axios from 'axios';
 import API_URL from '../../../config/apiConfig'; 
 import appFonts from '../../../themes/appFonts';
+import appColors from '../../../themes/appColors';
 const BestBrandUnderRoof = ( ) => {
   const {
     isDark,
@@ -95,8 +96,8 @@ const BestBrandUnderRoof = ( ) => {
           ellipsizeMode="tail"
           style={{
             textAlign: 'center',
-            color: item.description ? '#555' : "white",
-            fontSize: fontSizes.FONT13,
+            color: item.description ? appColors.textColorBlack : "white",
+            fontSize: fontSizes.FONT14,
             fontFamily: appFonts.medium
           }}
         >

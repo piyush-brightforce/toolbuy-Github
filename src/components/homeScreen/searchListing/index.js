@@ -7,6 +7,7 @@ import { useValues } from '../../../../App';
 import appColors from '../../../themes/appColors';
 import { useNavigation } from '@react-navigation/native';
 import IMAGE_CONFIG from '../../../config/imageConfig';
+import { ArrowInsert } from '../../../assets/googleIcons/ArrowInsert';
 
 const SearchingListingContainer = ({ data }) => {
   const { linearColorStyle, textColorStyle, isDark } =
@@ -17,7 +18,7 @@ const SearchingListingContainer = ({ data }) => {
     : [appColors.screenBg, appColors.screenBg];
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.newitem} onPress={() => navigation.navigate('ProductDetail', { product: { code: item?.SearchCode } })}>
+    <TouchableOpacity style={[styles.newitem,external.fd_row,external.js_space,external.ai_center]} onPress={() => navigation.navigate('ProductDetail', { product: { code: item?.SearchCode } })}>
       <Text
         style={[
           styles.price,
@@ -30,15 +31,12 @@ const SearchingListingContainer = ({ data }) => {
         ellipsizeMode="tail"
 
       >{item?.SearchFilter ? item.SearchFilter : ''}
+      
       </Text>
-      <View
-        style={{
-          height: 1,
-          backgroundColor: '#ccc',
-          width: '100%',
-          marginTop: 4,
-        }}
-      />
+      <View style={[external.mh_5]}>
+        <ArrowInsert />
+      </View>
+      
     </TouchableOpacity>
   );
 

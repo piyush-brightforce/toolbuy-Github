@@ -40,6 +40,9 @@ import { ArrowDown } from '../../../assets/googleIcons/arrowDown';
 import { ArrowUp } from '../../../assets/googleIcons/ArrowUp';
 import { formatCurrency } from '../../../style/rtlStyle';
 import OrderSummaryListItemContainer from './OrderSummaryItem';
+import { PincodeApiResponse, PincodeResponse } from '../../../models/countryCodemodel/countryCodeResponse';
+import api_service from '../../../utils/api_service/api_service';
+
 
 const AddressScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -120,6 +123,10 @@ const AddressScreen = ({ route }) => {
 
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false);
 
+  const [continueAddressResponseTag, setContinueAddressResponseTag] = useState(true);
+  const [continueOrderSummaryResponseTag, setContinueOrderSummaryResponseTag] = useState(false);
+  const [continuePaymentMethodResponseTag, setContinuePaymentMethodResponseTag] = useState(false);
+
   const { cartList, cartResponse } = route.params || {};
 
   const {
@@ -136,13 +143,14 @@ const AddressScreen = ({ route }) => {
     t, isLoaderLoading,
     setIsLoaderLoading,
   } = useValues();
-
+  const lastPincodeRef = useRef('');
+  const lastDelPincodeRef = useRef('');
   const paymentMethodIcons = [
-    { title: 'Credit / Debit / ATMCard', icon: `${IMAGE_CONFIG.IMAGEURL}/images/qr_code.svg`, righticon: `${IMAGE_CONFIG.IMAGEURL}/images/credit_list_image.svg`, method: 6 },
+
+    { title: 'UPI', icon: `${IMAGE_CONFIG.IMAGEURL}/images/account_balance_wallet.svg`, righticon: `${IMAGE_CONFIG.IMAGEURL}/images/upi_list_image.svg`, method: 9 },
+    { title: 'Cards', icon: `${IMAGE_CONFIG.IMAGEURL}/images/qr_code.svg`, righticon: `${IMAGE_CONFIG.IMAGEURL}/images/credit_list_image.svg`, method: 6 },
     { title: 'NetBanking', icon: `${IMAGE_CONFIG.IMAGEURL}/images/creditcard.svg`, righticon: `${IMAGE_CONFIG.IMAGEURL}/images/netbanking_list_image.svg`, method: 7 },
     { title: 'Wallet', icon: `${IMAGE_CONFIG.IMAGEURL}/images/netbanking.svg`, righticon: `${IMAGE_CONFIG.IMAGEURL}/images/wallet_list_image.svg`, method: 8 },
-    { title: 'UPI', icon: `${IMAGE_CONFIG.IMAGEURL}/images/account_balance_wallet.svg`, righticon: `${IMAGE_CONFIG.IMAGEURL}/images/upi_list_image.svg`, method: 9 },
-    { title: 'QR', icon: `${IMAGE_CONFIG.IMAGEURL}/images/paylater.svg`, righticon: `${IMAGE_CONFIG.IMAGEURL}/images/paylater_list.svg`, method: 10 },
     { title: 'NEFT / RTGS / IMPS', icon: `${IMAGE_CONFIG.IMAGEURL}/images/neft_img.svg`, righticon: `${IMAGE_CONFIG.IMAGEURL}/images/neft_list_image.svg`, method: 11 },
   ];
 
@@ -176,12 +184,36 @@ const AddressScreen = ({ route }) => {
   useEffect(() => {
     setIsLoaderLoading(true);
     const initialize = async () => {
-      getUserResponse();
-      fetchAddressList();
+      await getUserResponse();
+      await fetchAddressList();
     };
-
     initialize();
   }, []);
+
+  useEffect(() => {
+    const initialize = async () => {
+      if (
+        txtPincode.length === 6
+      ) {
+        await fetchCityandStateList(txtPincode);
+      }
+    };
+    initialize();
+
+  }, [txtPincode]);
+
+  useEffect(() => {
+    const initialize = async () => {
+      if (
+        txtDeliveryPincode.length === 6  
+      ) { 
+        await fetchCityandStateList(txtDeliveryPincode);
+      }
+    };
+    initialize();
+
+
+  }, [txtDeliveryPincode]);
 
 
 
@@ -212,6 +244,35 @@ const AddressScreen = ({ route }) => {
     </View>
   );
 
+
+  const fetchCityandStateList = async (pincode, del = false) => {
+    try {
+      const response = await api_service.fetchCityandStateList(pincode);
+
+      if (del) {
+        console.log("calling response screen1:", response?.state);
+        console.log("calling response screen2:", response?.district);
+        if (response?.district && response?.state) {
+
+          const index = indianStatesData.indexOf(response?.state); 
+          setTxtDeliveryCity(prev => prev !== response?.district ? response?.district : prev);
+          setDeliverydropdownStateValue(index);
+        }
+
+      } else {
+        console.log("calling response screen3:", response?.state);
+        console.log("calling response screen4:", response?.district);
+        if (response?.district && response?.state) {
+          const index = indianStatesData.indexOf(response?.state); 
+          setTxtCity(prev => prev !== response?.district ? response?.district : prev);
+          setdropdownStateValue(index);
+        }
+
+      }
+    } catch (error) {
+      return {}
+    }
+  };
 
   const fetchAddressList = async () => {
     try {
@@ -289,7 +350,7 @@ const AddressScreen = ({ route }) => {
       </View>
       <View style={[styles.defaulText, { flexDirection: viewRTLStyle }]}>
         <TouchableOpacity onPress={() => handleAddressSelectionChange("Choose Delivery Address")}>
-          <Text style={styles.removeText}>Choose Another Address</Text>
+          <Text style={[styles.removeText, { fontSize: fontSizes.FONT17, fontFamily: appFonts.bold }]}>Choose Another Address</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -326,7 +387,7 @@ const AddressScreen = ({ route }) => {
       </View>
       <View style={[styles.defaulText, { flexDirection: viewRTLStyle }]}>
         <TouchableOpacity onPress={() => handleAddressSelectionChange("Choose Billing Address")}>
-          <Text style={styles.removeText}>Choose Another Address</Text>
+          <Text style={[styles.removeText, { fontSize: fontSizes.FONT17, fontFamily: appFonts.semiBold }]}>Choose Another Address</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -392,12 +453,6 @@ const AddressScreen = ({ route }) => {
 
               }} />
             </View>
-            <FixedSvgFromUrl
-              width={20}
-              height={20}
-              resizeMode={'contain'}
-              uri={item.icon}
-            />
             <Text style={[commonStyles.subtitleText, { color: textColorStyle, paddingLeft: 5, fontFamily: appFonts.bold }]}>
               {item.title}
             </Text>
@@ -406,8 +461,8 @@ const AddressScreen = ({ route }) => {
         <View style={[styles.monoText, { alignContent: 'flex-end' }]}>
           <FixedSvgFromUrl
 
-            height={index === 5 ? 15 : 40}
-            width={index === 5 ? 15 : SCREEN_WIDTH / 4}
+            height={index === 4 ? 20 : 40}
+            width={index === 4 ? 20 : SCREEN_WIDTH / 3.5}
             resizeMode={'contain'}
             uri={item.righticon}
           />
@@ -415,7 +470,7 @@ const AddressScreen = ({ route }) => {
 
 
       </View>
-      <SolidLine />
+      {index !== 5 && <SolidLine />}
     </View>
   );
 
@@ -609,6 +664,8 @@ const AddressScreen = ({ route }) => {
 
           setaddAddressModal(false);
           await addNewAddressApiCall();
+          setContinueAddressResponseTag(false);
+          setContinueOrderSummaryResponseTag(true);
 
           clearAllTextField();
         }
@@ -632,6 +689,8 @@ const AddressScreen = ({ route }) => {
 
           setaddAddressModal(false);
           await addNewAddressApiCall();
+          setContinueAddressResponseTag(false);
+          setContinueOrderSummaryResponseTag(true);
           clearAllTextField();
         }
       }
@@ -838,6 +897,7 @@ const AddressScreen = ({ route }) => {
 
       setPlaceOrderLoading(true);
       const token = await getValue(PREFERENCE_KEY.USERTOKEN);
+      console.log("amount of razorpay", amount);
 
 
       const response = await axios.post(API_URL.MAKEPAYMENTRAZORPAY,
@@ -936,16 +996,17 @@ const AddressScreen = ({ route }) => {
   };
 
 
-  const openRazorpay = ({ orderId, amount, method, razorPayOrderID, razorPayPayID, shippingAddressid, billingAddressid }) => {
+  const openRazorpay = async ({ orderId, amount, method, razorPayOrderID, razorPayPayID, shippingAddressid, billingAddressid }) => {
 
     const primaryAddress = addressListResponse.find(item => item.isPrimary);
+
     const options = {
       description: 'Order Payment',
-      currency: 'INR',
+      currency: currency,
       image: 'https://cdn.razorpay.com/logos/KxatSNw3dGjnN8_medium.png',
       key: 'rzp_live_jw6LKKI6FAlmEl',
       // key_secret: "PFFSIlQLriuYTRHPriu8vTqN",
-      amount: amount, // ₹500
+      amount: amount * 100,
       name: 'ToolBuy',
       order_id: razorPayOrderID,
       prefill: {
@@ -1016,28 +1077,33 @@ const AddressScreen = ({ route }) => {
                     </View>
                     <Text
                       style={[
-                        commonStyles.titleText19,
-                        { color: textColorStyle },
+                        commonStyles.subtitleText,
+                        { color: textColorStyle, fontSize: fontSizes.FONT17, fontFamily: appFonts.semiBold },
                         { textAlign: textRTLStyle },
                       ]}>
                       Customer Information
                     </Text>
                   </View>
-                  <Text
-                    style={[
-                      commonStyles.titleText19,
-                      { color: appColors.primary, fontSize: fontSizes.FONT17 },
-                      { textAlign: textRTLStyle },
-                    ]}>
-                    Edit
-                  </Text>
+                  <TouchableOpacity onPress={() => {
+                    navigation.navigate('OrderDashBoardScreen', { selectedTab: 'Profile' });
+                    <Text
+                      style={[
+                        commonStyles.subtitleText,
+                        { color: appColors.primary, fontSize: fontSizes.FONT17, fontFamily: appFonts.regular },
+                        { textAlign: textRTLStyle },
+                      ]}>
+                      Edit
+                    </Text>
+                  }}>
+
+                  </TouchableOpacity>
+
 
                 </View>
-                <SolidLine />
                 <Text
                   style={[
                     commonStyles.subtitleText,
-                    { color: textColorStyle },
+                    { color: textColorStyle, fontFamily: appFonts.regular },
                     { textAlign: textRTLStyle },
                   ]}>
                   Welcome {userResponse?.FullName ?? ""} {userResponse?.BusinessName && userResponse?.BusinessName}
@@ -1072,8 +1138,8 @@ const AddressScreen = ({ route }) => {
                       </View>
                       <Text
                         style={[
-                          commonStyles.titleText19,
-                          { color: textColorStyle },
+                          commonStyles.subtitleText,
+                          { color: textColorStyle, fontSize: fontSizes.FONT17, fontFamily: appFonts.semiBold },
                           { textAlign: textRTLStyle },
                         ]}>
                         Delivery & Billing Address
@@ -1081,12 +1147,11 @@ const AddressScreen = ({ route }) => {
                     </View>
 
                   </View>
-                  <SolidLine />
                   <View>
                     <View style={[styles.defaulText, { flexDirection: viewRTLStyle }, external.ai_center]}>
 
                       <RadioButton checked={true} />
-                      <Text style={[styles.removeText, { color: textColorStyle, fontFamily: appFonts.bold }, external.ml_5]}>Add a new Delivery Address</Text>
+                      <Text style={[styles.removeText, { color: textColorStyle }, external.ml_5]}>Add a new Delivery Address</Text>
 
                     </View>
                     <TextInputs
@@ -1101,6 +1166,8 @@ const AddressScreen = ({ route }) => {
                           setTxtfullnameError('');
                         }
                       }}
+                      isrequired={true}
+                      errorMessage={txtfullnameError !== '' && true}
                       onSubmitEditing={() => Keyboard.dismiss()}
                     />
                     {txtfullnameError !== '' && <Text style={styles.errorStyle}>{txtfullnameError}</Text>}
@@ -1110,7 +1177,7 @@ const AddressScreen = ({ route }) => {
                       placeHolder={"10 Digit Mobile Number"}
                       keyboardType={"number-pad"}
                       maxLength={10}
-
+                      isrequired={true}
                       onChangeText={text => {
                         setTxtPhoneNumber(text);
                         if (text.trim() === '') {
@@ -1122,6 +1189,7 @@ const AddressScreen = ({ route }) => {
                       onBlur={() => {
                         validatePhoneNumber();
                       }}
+                      errorMessage={txtPhoneNumberError !== '' && true}
                       onSubmitEditing={() => validatePhoneNumber()}
                     />
                     {txtPhoneNumberError !== '' && <Text style={styles.errorStyle}>{txtPhoneNumberError}</Text>}
@@ -1138,6 +1206,8 @@ const AddressScreen = ({ route }) => {
                           setTxtAddressLine1Error('');
                         }
                       }}
+                      isrequired={true}
+                      errorMessage={txtAddressLine1Error !== '' && true}
                     />
                     {txtAddressLine1Error !== '' && <Text style={styles.errorStyle}>{txtAddressLine1Error}</Text>}
 
@@ -1159,7 +1229,7 @@ const AddressScreen = ({ route }) => {
                       }}
                     />
                     <TextInputs
-                      value={txtPincode}
+                      value={txtPincode?.toString() || ''}
                       title={"Pincode"}
                       placeHolder={"Pincode"}
                       onChangeText={text => {
@@ -1170,7 +1240,8 @@ const AddressScreen = ({ route }) => {
                           setTxtPincodeError('');
                         }
                       }}
-
+                      isrequired={true}
+                      errorMessage={txtPincodeError !== '' && true}
                       keyboardType={'number-pad'}
                       onBlur={() => {
                         validatePincondeNumber();
@@ -1186,7 +1257,7 @@ const AddressScreen = ({ route }) => {
                       external.js_center,]}>
                       <View style={{ width: '47%', marginHorizontal: 10 }}>
                         <TextInputs
-                          value={txtCity}
+                          value={txtCity?.toString() || ''}
                           title={"CityTown"}
                           placeHolder={"CityTown"}
                           onChangeText={text => {
@@ -1197,6 +1268,8 @@ const AddressScreen = ({ route }) => {
                               setTxtCityError('');
                             }
                           }}
+                          isrequired={true}
+                          errorMessage={txtCityError !== '' && true}
                           onSubmitEditing={() => Keyboard.dismiss()}
                         />
                       </View>
@@ -1230,6 +1303,20 @@ const AddressScreen = ({ route }) => {
                       </Text>
                     </View>
 
+                    <View style={[styles.defaulText, { flexDirection: viewRTLStyle }]}>
+                      <CheckBox
+                        onPress={handleSetSelectedBuyingCompany}
+                        checked={selectedBuyingCompany}
+                      />
+                      <Text
+                        style={[
+                          styles.defaulTextView,
+                          { color: textColorStyle },
+                          { textAlign: textRTLStyle },
+                        ]}>
+                        I am buying for a company
+                      </Text>
+                    </View>
 
                     {selectedBuyingCompany && <View style={[
                       external.fd_row,
@@ -1239,16 +1326,18 @@ const AddressScreen = ({ route }) => {
 
                         <TextInputs
                           value={txtCompanyName}
-                          title={"Your Company name"}
-                          placeHolder={"Your Company name"}
+                          title={"Company or Business Name"}
+                          placeHolder={"Company or Business Name"}
                           onChangeText={text => {
                             setTxtCompanyName(text);
                             if (text.trim() === '') {
-                              setTxtCompanyNameError('Your Company name is required');
+                              setTxtCompanyNameError('Business Name is required');
                             } else {
                               setTxtCompanyNameError('');
                             }
                           }}
+                          isrequired={true}
+                          errorMessage={txtCompanyNameError !== '' && true}
                         />
 
                       </View>
@@ -1265,20 +1354,6 @@ const AddressScreen = ({ route }) => {
                       </View>
                     </View>}
                     {txtCompanyNameError !== '' && <Text style={styles.errorStyle}>{txtCompanyNameError}</Text>}
-                    <View style={[styles.defaulText, { flexDirection: viewRTLStyle }]}>
-                      <CheckBox
-                        onPress={handleSetSelectedBuyingCompany}
-                        checked={selectedBuyingCompany}
-                      />
-                      <Text
-                        style={[
-                          styles.defaulTextView,
-                          { color: textColorStyle },
-                          { textAlign: textRTLStyle },
-                        ]}>
-                        I am buying for a company
-                      </Text>
-                    </View>
                   </View>
 
 
@@ -1287,7 +1362,7 @@ const AddressScreen = ({ route }) => {
                   {!selectedDeliveryAsB && <View>
                     <View style={[styles.defaulText, { flexDirection: viewRTLStyle }, external.ai_center]}>
                       <RadioButton checked={true} />
-                      <Text style={[styles.removeText, { color: textColorStyle, fontFamily: appFonts.bold }, external.ml_5]}>Add a new Delivery Address</Text>
+                      <Text style={[styles.removeText, { color: textColorStyle }, external.ml_5]}>Add a new Delivery Address</Text>
                     </View>
 
                     <TextInputs
@@ -1302,6 +1377,8 @@ const AddressScreen = ({ route }) => {
                           setTxtDeliveryfullnameError('');
                         }
                       }}
+                      isrequired={true}
+                      errorMessage={txtDeliveryfullnameError !== '' && true}
                       onSubmitEditing={() => Keyboard.dismiss()}
                     />
                     {txtDeliveryfullnameError !== '' && <Text style={styles.errorStyle}>{txtDeliveryfullnameError}</Text>}
@@ -1311,7 +1388,7 @@ const AddressScreen = ({ route }) => {
                       placeHolder={"10 Digit Mobile Number"}
                       keyboardType={"number-pad"}
                       maxLength={10}
-
+                      isrequired={true}
                       onChangeText={text => {
                         setTxtDeliveryPhoneNumber(text);
                         if (text.trim() === '') {
@@ -1324,6 +1401,8 @@ const AddressScreen = ({ route }) => {
                         validateDeliveryPhoneNumber();
                       }}
                       onSubmitEditing={() => validateDeliveryPhoneNumber()}
+
+                      errorMessage={txtDeliveryPhoneNumberError !== '' && true}
                     />
                     {txtDeliveryPhoneNumberError !== '' && <Text style={styles.errorStyle}>{txtDeliveryPhoneNumberError}</Text>}
 
@@ -1339,6 +1418,8 @@ const AddressScreen = ({ route }) => {
                           setTxtDeliveryAddressLine1Error('');
                         }
                       }}
+                      isrequired={true}
+                      errorMessage={txtDeliveryAddressLine1Error !== '' && true}
                     />
                     {txtDeliveryAddressLine1Error !== '' && <Text style={styles.errorStyle}>{txtDeliveryAddressLine1Error}</Text>}
 
@@ -1360,7 +1441,7 @@ const AddressScreen = ({ route }) => {
                       }}
                     />
                     <TextInputs
-                      value={txtDeliveryPincode}
+                      value={txtDeliveryPincode?.toString() || ''}
                       title={"Pincode"}
                       placeHolder={"Pincode"}
                       onChangeText={text => {
@@ -1371,6 +1452,8 @@ const AddressScreen = ({ route }) => {
                           setTxtDeliveryPincodeError('');
                         }
                       }}
+                      isrequired={true}
+                      errorMessage={txtDeliveryPincodeError !== '' && true}
 
                       keyboardType={'number-pad'}
                       onBlur={() => {
@@ -1387,7 +1470,7 @@ const AddressScreen = ({ route }) => {
                       external.js_center,]}>
                       <View style={{ width: '47%', marginHorizontal: 10 }}>
                         <TextInputs
-                          value={txtDeliveryCity}
+                          value={txtDeliveryCity?.toString() || ''}
                           title={"CityTown"}
                           placeHolder={"CityTown"}
                           onChangeText={text => {
@@ -1398,6 +1481,8 @@ const AddressScreen = ({ route }) => {
                               setTxtDeliveryCityError('');
                             }
                           }}
+                          isrequired={true}
+                          errorMessage={txtDeliveryCityError !== '' && true}
                           onSubmitEditing={() => Keyboard.dismiss()}
                         />
                       </View>
@@ -1424,16 +1509,18 @@ const AddressScreen = ({ route }) => {
 
                         <TextInputs
                           value={txtDeliveryCompanyName}
-                          title={"Your Company name"}
-                          placeHolder={"Your Company name"}
+                          title={"Company or Business Name"}
+                          placeHolder={"Company or Business Name"}
                           onChangeText={text => {
                             setTxtDeliveryCompanyName(text);
                             if (text.trim() === '') {
-                              setTxtDeliveryCompanyNameError('Your Company name is required');
+                              setTxtDeliveryCompanyNameError('Business Name is required');
                             } else {
                               setTxtDeliveryCompanyNameError('');
                             }
                           }}
+                          isrequired={true}
+                          errorMessage={txtDeliveryCompanyNameError !== '' && true}
                         />
 
                       </View>
@@ -1455,14 +1542,7 @@ const AddressScreen = ({ route }) => {
 
 
 
-                  <View style={external.pt_10}>
-                    <NavigationButton
-                      backgroundColor={appColors.primary}
-                      title={'Continue'}
-                      color={appColors.screenBg}
-                      onPress={() => handleAddNewAddress()}
-                    />
-                  </View>
+
 
                 </View>
               </View>
@@ -1490,8 +1570,8 @@ const AddressScreen = ({ route }) => {
                     </View>
                     <Text
                       style={[
-                        commonStyles.titleText19,
-                        { color: textColorStyle },
+                        commonStyles.subtitleText,
+                        { color: textColorStyle, fontSize: fontSizes.FONT17, fontFamily: appFonts.semiBold },
                         { textAlign: textRTLStyle },
                       ]}>
                       Delivery & Billing Address
@@ -1499,11 +1579,10 @@ const AddressScreen = ({ route }) => {
                   </View>
 
                 </View>
-                <SolidLine />
                 <Text
                   style={[
-                    commonStyles.titleText19,
-                    { color: textColorStyle },
+                    commonStyles.subtitleText,
+                    { color: textColorStyle, fontFamily: appFonts.bold },
                     { textAlign: textRTLStyle }, external.mv_5
                   ]}>
                   Delivery Address
@@ -1513,8 +1592,8 @@ const AddressScreen = ({ route }) => {
 
                 <Text
                   style={[
-                    commonStyles.titleText19,
-                    { color: textColorStyle },
+                    commonStyles.subtitleText,
+                    { color: textColorStyle, fontFamily: appFonts.bold },
                     { textAlign: textRTLStyle }, external.mv_5
                   ]}>
                   Billing Address
@@ -1525,10 +1604,24 @@ const AddressScreen = ({ route }) => {
             </View>
           </LinearGradient>}
 
-
+          {continueAddressResponseTag && <View style={[external.pt_10, external.mh_15]}>
+            <NavigationButton
+              backgroundColor={appColors.primary}
+              title={'Continue'}
+              color={appColors.screenBg}
+              onPress={() => {
+                if (!addressListResponse || addressListResponse.length === 0) {
+                  handleAddNewAddress();
+                } else if (addressListResponse && addressListResponse.length > 0) {
+                  setContinueAddressResponseTag(false);
+                  setContinueOrderSummaryResponseTag(true);
+                }
+              }}
+            />
+          </View>}
 
           {/* order summury */}
-          <LinearGradient
+          {continueOrderSummaryResponseTag && !continueAddressResponseTag ? <LinearGradient
             start={{ x: 0.0, y: 0.0 }}
             end={{ x: 0.0, y: 1.0 }}
             colors={linearColorStyle}
@@ -1550,8 +1643,8 @@ const AddressScreen = ({ route }) => {
                   </View>
                   <Text
                     style={[
-                      commonStyles.titleText19,
-                      { color: textColorStyle },
+                      commonStyles.subtitleText,
+                      { color: textColorStyle, fontSize: fontSizes.FONT17, fontFamily: appFonts.semiBold },
                       { textAlign: textRTLStyle },
                     ]}>
                     Order Summary
@@ -1571,7 +1664,7 @@ const AddressScreen = ({ route }) => {
                       scrollEnabled={false}
                     />
                   </View>
-                  {(cartList && cartList.length > 3) && <TouchableOpacity
+                  {(cartList && cartList.length > 3) ? <TouchableOpacity
                     onPress={handleSetSelectedSummaryExpanded}
                   >
                     <View style={[styles.summaryOrderContainer, { backgroundColor: appColors.primary }, external.ai_center, external.js_center]}>
@@ -1581,6 +1674,13 @@ const AddressScreen = ({ route }) => {
 
                     </View>
 
+                  </TouchableOpacity> : <TouchableOpacity
+                    onPress={() => {
+                      setSelectedOrderSummaryExpanded(!selectedOrderSummaryExpanded);
+                    }}
+                  >
+                    {selectedOrderSummaryExpanded ? <ArrowUp /> : <ArrowDown />}
+
                   </TouchableOpacity>
                   }
 
@@ -1589,13 +1689,57 @@ const AddressScreen = ({ route }) => {
 
               </View>
             </View>
-            {(cartList && cartList.length > 3 && selectedOrderSummaryExpanded) && <OrderSummaryListItemContainer data={cartList} />}
+            {(selectedOrderSummaryExpanded) && <OrderSummaryListItemContainer data={cartList} />}
 
-          </LinearGradient>
+          </LinearGradient> :
+            <LinearGradient
+              start={{ x: 0.0, y: 0.0 }}
+              end={{ x: 0.0, y: 1.0 }}
+              colors={linearColorStyle}
+              style={styles.container}>
+              <View style={[styles.viewContainer, { flexDirection: viewRTLStyle }]}>
+                <View style={[external.fg_1]}>
+                  <View style={[external.fd_row, external.ai_center, external.Pb_5]}>
+                    <View style={external.pr_5}>
+                      <View style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        backgroundColor: appColors.textColorGray,
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                      }}>
+                        <Text style={{ color: appColors.textColorWhite, fontSize: 12 }}>3</Text>
+                      </View>
+                    </View>
+                    <Text
+                      style={[
+                        commonStyles.subtitleText,
+                        { color: appColors.textColorGray, fontSize: fontSizes.FONT17, fontFamily: appFonts.semiBold },
+                        { textAlign: textRTLStyle },
+                      ]}>
+                      Order Summary
+                    </Text>
+                  </View>
 
+                </View>
+              </View>
+              {(selectedOrderSummaryExpanded) && <OrderSummaryListItemContainer data={cartList} />}
 
+            </LinearGradient>}
+
+          {continueOrderSummaryResponseTag && !continuePaymentMethodResponseTag && <View style={[external.pt_10, external.mh_15]}>
+            <NavigationButton
+              backgroundColor={appColors.primary}
+              title={'Continue'}
+              color={appColors.screenBg}
+              onPress={() => {
+                setContinuePaymentMethodResponseTag(true);
+              }}
+            />
+          </View>}
           {/* Payment Methods */}
-          <LinearGradient
+          {continuePaymentMethodResponseTag ? <LinearGradient
             start={{ x: 0.0, y: 0.0 }}
             end={{ x: 0.0, y: 1.0 }}
             colors={linearColorStyle}
@@ -1617,64 +1761,63 @@ const AddressScreen = ({ route }) => {
                   </View>
                   <Text
                     style={[
-                      commonStyles.titleText19,
-                      { color: textColorStyle },
+                      commonStyles.subtitleText,
+                      { color: textColorStyle, fontSize: fontSizes.FONT17, fontFamily: appFonts.semiBold },
                       { textAlign: textRTLStyle },
                     ]}>
                     Payment Methods
                   </Text>
                 </View>
-                <SolidLine />
                 <FlatList data={paymentMethodIcons} renderItem={paymentMethodItem} />
 
                 {/* NEFL/RTGS View */}
-                {paymentMethodSelectionValue === 5 && <View style={[styles.shadowWrapper, external.p_15]}>
+                {paymentMethodSelectionValue === 4 && <View style={[styles.shadowWrapper, external.p_15]}>
 
                   <View style={[styles.monoText, external.pv_5, { flexDirection: viewRTLStyle }]}>
-                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle }]}>
+                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontSize: fontSizes.FONT15 }]}>
                       Bank Name:
                     </Text>
-                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontFamily: appFonts.bold }]}>
+                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontFamily: appFonts.bold, fontSize: fontSizes.FONT15 }]}>
                       HDFC BANK LTD
                     </Text>
                   </View>
                   <View style={[styles.monoText, external.pv_5, { flexDirection: viewRTLStyle }]}>
-                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle }]}>
+                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontSize: fontSizes.FONT15 }]}>
                       Account Number :
                     </Text>
-                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontFamily: appFonts.bold }]}>
+                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontFamily: appFonts.bold, fontSize: fontSizes.FONT15 }]}>
                       50200075013139
                     </Text>
                   </View>
                   <View style={[styles.monoText, external.pv_5, { flexDirection: viewRTLStyle }]}>
-                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle }]}>
+                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontSize: fontSizes.FONT15 }]}>
                       Account Type :
                     </Text>
-                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontFamily: appFonts.bold }]}>
+                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontFamily: appFonts.bold, fontSize: fontSizes.FONT15 }]}>
                       Current Account
                     </Text>
                   </View>
                   <View style={[styles.monoText, external.pv_5, { flexDirection: viewRTLStyle }]}>
-                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle }]}>
+                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontSize: fontSizes.FONT15 }]}>
                       IFSC Code :
                     </Text>
-                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontFamily: appFonts.bold }]}>
+                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontFamily: appFonts.bold, fontSize: fontSizes.FONT15 }]}>
                       HDFC0000038
                     </Text>
                   </View>
                   <View style={[styles.monoText, external.pv_5, { flexDirection: viewRTLStyle }]}>
-                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle }]}>
+                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontSize: fontSizes.FONT15 }]}>
                       Beneficiary Name :
                     </Text>
-                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontFamily: appFonts.bold }]}>
+                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontFamily: appFonts.bold, fontSize: fontSizes.FONT15 }]}>
                       TOOLBUY ECOM PRIVATE LIMITED
                     </Text>
                   </View>
                   <View style={[styles.monoText, external.pv_5, { flexDirection: viewRTLStyle }]}>
-                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle }]}>
+                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontSize: fontSizes.FONT15 }]}>
                       BranchName :
                     </Text>
-                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontFamily: appFonts.bold }]}>
+                    <Text style={[commonStyles.subtitleText, external.fx_1, { color: textColorStyle, fontFamily: appFonts.bold, fontSize: fontSizes.FONT15 }]}>
                       Evershine City, Vasai (East)
                     </Text>
                   </View>
@@ -1684,45 +1827,80 @@ const AddressScreen = ({ route }) => {
 
               </View>
             </View>
-          </LinearGradient>
+          </LinearGradient> :
+            <LinearGradient
+              start={{ x: 0.0, y: 0.0 }}
+              end={{ x: 0.0, y: 1.0 }}
+              colors={linearColorStyle}
+              style={styles.container}>
+              <View style={[styles.viewContainer, { flexDirection: viewRTLStyle }]}>
+                <View style={[external.fg_1]}>
+                  <View style={[external.fd_row, external.ai_center, external.Pb_5]}>
+                    <View style={external.pr_5}>
+                      <View style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        backgroundColor: appColors.textColorGray,
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                      }}>
+                        <Text style={{ color: appColors.textColorWhite, fontSize: 12 }}>4</Text>
+                      </View>
+                    </View>
+                    <Text
+                      style={[
+                        commonStyles.subtitleText,
+                        { color: appColors.textColorGray, fontSize: fontSizes.FONT17, fontFamily: appFonts.semiBold },
+                        { textAlign: textRTLStyle },
+                      ]}>
+                      Payment Methods
+                    </Text>
+                  </View>
+
+
+
+                </View>
+              </View>
+            </LinearGradient>}
 
         </ScrollView>
-
-        <View style={[external.fd_row, external.ai_center, external.js_center, external.mv_10,]}>
+        {continuePaymentMethodResponseTag && <View style={[external.fd_coloumn, external.ai_center, external.js_center, external.mv_10,]}>
           <Text style={[commonStyles.subtitleText, external.ti_center, { fontSize: fontSizes.FONT13, width: SCREEN_WIDTH / 1.4, color: textColorStyle }]}>
-            {"By signing in to Toolbuy.com, You're agreeing to our "}
-            <Text
-              style={[
+            {"By continuing you agree to our"}
 
-                commonStyles.titleText19,
-                { color: appColors.primary, fontSize: fontSizes.FONT14 },
-              ]}
-              onPress={() => navigation.navigate("WebViewContainer", {
-                url: "https://www.toolbuy.com/policy/terms-conditions",
-                title: "Terms and Conditions"
-              })}
-            >
-              {"Terms and Conditions "}
+          </Text>
+          <Text
+            style={[
+
+              commonStyles.titleText19,
+              { color: appColors.primary, fontSize: fontSizes.FONT14 },
+            ]}
+            onPress={() => navigation.navigate("WebViewContainer", {
+              url: "https://www.toolbuy.com/policy/terms-conditions",
+              title: "Terms and Conditions"
+            })}
+          >
+            {"Terms and Conditions "}
+            <Text
+              style={[commonStyles.subtitleText, { fontSize: fontSizes.FONT13, color: textColorStyle }
+              ]}>
+              {"and "}
               <Text
-                style={[commonStyles.subtitleText, { fontSize: fontSizes.FONT13, color: textColorStyle }
-                ]}>
-                {"and "}
-                <Text
-                  style={[
-                    commonStyles.titleText19,
-                    { color: appColors.primary, fontSize: fontSizes.FONT14 },
-                  ]}
-                  onPress={() => navigation.navigate("WebViewContainer", { url: "https://www.toolbuy.com/policy/privacy", title: "Privacy Policy" })}
-                >
-                  {"Privacy Policy"}
-                </Text>
+                style={[
+                  commonStyles.titleText19,
+                  { color: appColors.primary, fontSize: fontSizes.FONT14 },
+                ]}
+                onPress={() => navigation.navigate("WebViewContainer", { url: "https://www.toolbuy.com/policy/privacy", title: "Privacy Policy" })}
+              >
+                {"Privacy Policy"}
               </Text>
             </Text>
           </Text>
 
 
-        </View>
-        <BottomContainer
+        </View>}
+        {continuePaymentMethodResponseTag && <BottomContainer
           leftValue={
             <View>
               <TouchableOpacity onPress={() => openSheet()}>
@@ -1777,7 +1955,7 @@ const AddressScreen = ({ route }) => {
               {placeOrderLoading ? <ActivityIndicator color={appColors.textColorWhite} /> : <Text style={[styles.checkOut]}>Place Order</Text>}
             </TouchableOpacity>
           }
-        />
+        />}
 
 
 
@@ -1886,6 +2064,7 @@ const AddressScreen = ({ route }) => {
                     {editAddress}
                   </Text>
                 </View>
+
                 <TouchableOpacity onPress={() => setEditModal(false)}>
                   <Cross />
                 </TouchableOpacity>
@@ -1910,6 +2089,8 @@ const AddressScreen = ({ route }) => {
                         setTxtfullnameError('');
                       }
                     }}
+                    isrequired={true}
+                    errorMessage={txtfullnameError !== '' && true}
                     onSubmitEditing={() => Keyboard.dismiss()}
                   />
                   {txtfullnameError !== '' && <Text style={styles.errorStyle}>{txtfullnameError}</Text>}
@@ -1919,7 +2100,7 @@ const AddressScreen = ({ route }) => {
                     placeHolder={"10 Digit Mobile Number"}
                     keyboardType={"number-pad"}
                     maxLength={10}
-
+                    isrequired={true}
                     onChangeText={text => {
                       setTxtPhoneNumber(text);
                       if (text.trim() === '') {
@@ -1932,6 +2113,8 @@ const AddressScreen = ({ route }) => {
                       validatePhoneNumber();
                     }}
                     onSubmitEditing={() => validatePhoneNumber()}
+
+                    errorMessage={txtPhoneNumberError !== '' && true}
                   />
                   {txtPhoneNumberError !== '' && <Text style={styles.errorStyle}>{txtPhoneNumberError}</Text>}
                   {userResponse?.BusinessName && <TextInputs
@@ -1953,6 +2136,8 @@ const AddressScreen = ({ route }) => {
                         setTxtAddressLine1Error('');
                       }
                     }}
+                    isrequired={true}
+                    errorMessage={txtAddressLine1Error !== '' && true}
                   />
                   {txtAddressLine1Error !== '' && <Text style={styles.errorStyle}>{txtAddressLine1Error}</Text>}
 
@@ -1974,7 +2159,7 @@ const AddressScreen = ({ route }) => {
                     }}
                   />
                   <TextInputs
-                    value={txtPincode}
+                    value={txtPincode?.toString() || ''}
                     title={"Pincode"}
                     placeHolder={"Pincode"}
                     onChangeText={text => {
@@ -1985,7 +2170,8 @@ const AddressScreen = ({ route }) => {
                         setTxtPincodeError('');
                       }
                     }}
-
+                    isrequired={true}
+                    errorMessage={txtPincodeError !== '' && true}
                     keyboardType={'number-pad'}
                     onBlur={() => {
                       validatePincondeNumber();
@@ -2001,7 +2187,7 @@ const AddressScreen = ({ route }) => {
                     external.js_center,]}>
                     <View style={{ width: '47%', marginHorizontal: 10 }}>
                       <TextInputs
-                        value={txtCity}
+                        value={txtCity?.toString() || ''}
                         title={"CityTown"}
                         placeHolder={"CityTown"}
                         onChangeText={text => {
@@ -2013,6 +2199,8 @@ const AddressScreen = ({ route }) => {
                           }
                         }}
                         onSubmitEditing={() => Keyboard.dismiss()}
+                        isrequired={true}
+                        errorMessage={txtCityError !== '' && true}
                       />
                     </View>
                     <View style={{ width: '47%', marginHorizontal: 10 }}>
@@ -2036,16 +2224,18 @@ const AddressScreen = ({ route }) => {
 
                       <TextInputs
                         value={txtCompanyName}
-                        title={"Your Company name"}
-                        placeHolder={"Your Company name"}
+                        title={"Company or Business Name"}
+                        placeHolder={"Company or Business Name"}
                         onChangeText={text => {
                           setTxtCompanyName(text);
                           if (text.trim() === '') {
-                            setTxtCompanyNameError('Your Company name is required');
+                            setTxtCompanyNameError('Business Name is required');
                           } else {
                             setTxtCompanyNameError('');
                           }
                         }}
+                        isrequired={true}
+                        errorMessage={txtCompanyNameError !== '' && true}
                       />
 
                     </View>
@@ -2130,6 +2320,8 @@ const AddressScreen = ({ route }) => {
                         setTxtfullnameError('');
                       }
                     }}
+                    isrequired={true}
+                    errorMessage={txtfullnameError !== '' && true}
                     onSubmitEditing={() => Keyboard.dismiss()}
                   />
                   {txtfullnameError !== '' && <Text style={styles.errorStyle}>{txtfullnameError}</Text>}
@@ -2139,7 +2331,7 @@ const AddressScreen = ({ route }) => {
                     placeHolder={"10 Digit Mobile Number"}
                     keyboardType={"number-pad"}
                     maxLength={10}
-
+                    isrequired={true}
                     onChangeText={text => {
                       setTxtPhoneNumber(text);
                       if (text.trim() === '') {
@@ -2151,6 +2343,8 @@ const AddressScreen = ({ route }) => {
                     onBlur={() => {
                       validatePhoneNumber();
                     }}
+
+                    errorMessage={txtPhoneNumberError !== '' && true}
                     onSubmitEditing={() => validatePhoneNumber()}
                   />
                   {txtPhoneNumberError !== '' && <Text style={styles.errorStyle}>{txtPhoneNumberError}</Text>}
@@ -2167,6 +2361,9 @@ const AddressScreen = ({ route }) => {
                         setTxtAddressLine1Error('');
                       }
                     }}
+                    isrequired={true}
+
+                    errorMessage={txtAddressLine1Error !== '' && true}
                   />
                   {txtAddressLine1Error !== '' && <Text style={styles.errorStyle}>{txtAddressLine1Error}</Text>}
 
@@ -2188,7 +2385,7 @@ const AddressScreen = ({ route }) => {
                     }}
                   />
                   <TextInputs
-                    value={txtPincode}
+                    value={txtPincode?.toString() || ''}
                     title={"Pincode"}
                     placeHolder={"Pincode"}
                     onChangeText={text => {
@@ -2199,7 +2396,8 @@ const AddressScreen = ({ route }) => {
                         setTxtPincodeError('');
                       }
                     }}
-
+                    isrequired={true}
+                    errorMessage={txtPincodeError !== '' && true}
                     keyboardType={'number-pad'}
                     onBlur={() => {
                       validatePincondeNumber();
@@ -2215,7 +2413,7 @@ const AddressScreen = ({ route }) => {
                     external.js_center,]}>
                     <View style={{ width: '47%', marginHorizontal: 10 }}>
                       <TextInputs
-                        value={txtCity}
+                        value={txtCity?.toString() || ''}
                         title={"CityTown"}
                         placeHolder={"CityTown"}
                         onChangeText={text => {
@@ -2226,6 +2424,9 @@ const AddressScreen = ({ route }) => {
                             setTxtCityError('');
                           }
                         }}
+
+                        isrequired={true}
+                        errorMessage={txtCityError !== '' && true}
                         onSubmitEditing={() => Keyboard.dismiss()}
                       />
                     </View>
@@ -2244,40 +2445,7 @@ const AddressScreen = ({ route }) => {
                   {txtCityError !== '' && <Text style={styles.errorStyle}>{txtCityError}</Text>}
 
 
-                  {selectedBuyingCompany1 && <View style={[
-                    external.fd_row,
-                    external.ai_center,
-                    external.js_center,]}>
-                    <View style={{ width: '47%', marginHorizontal: 10 }}>
 
-                      <TextInputs
-                        value={txtCompanyName}
-                        title={"Your Company name"}
-                        placeHolder={"Your Company name"}
-                        onChangeText={text => {
-                          setTxtCompanyName(text);
-                          if (text.trim() === '') {
-                            setTxtCompanyNameError('Your Company name is required');
-                          } else {
-                            setTxtCompanyNameError('');
-                          }
-                        }}
-                      />
-
-                    </View>
-                    <View style={{ width: '47%', marginHorizontal: 10 }}>
-
-                      <TextInputs
-                        value={txtGstNumber}
-                        title={"GST Number (Optional)"}
-                        placeHolder={"GST Number (Optional)"}
-                        onChangeText={text => {
-                          setTxtGstNumber(text);
-                        }}
-                      />
-                    </View>
-                  </View>}
-                  {txtCompanyNameError !== '' && <Text style={styles.errorStyle}>{txtCompanyNameError}</Text>}
                   <View style={[styles.defaulText, { flexDirection: viewRTLStyle }]}>
                     <CheckBox
                       onPress={setSelectedDelAsBil1}
@@ -2307,6 +2475,42 @@ const AddressScreen = ({ route }) => {
                       I am buying for a company
                     </Text>
                   </View>
+                  {selectedBuyingCompany1 && <View style={[
+                    external.fd_row,
+                    external.ai_center,
+                    external.js_center,]}>
+                    <View style={{ width: '47%', marginHorizontal: 10 }}>
+
+                      <TextInputs
+                        value={txtCompanyName}
+                        title={"Company or Business Name"}
+                        placeHolder={"Company or Business Name"}
+                        onChangeText={text => {
+                          setTxtCompanyName(text);
+                          if (text.trim() === '') {
+                            setTxtCompanyNameError('Business Name is required');
+                          } else {
+                            setTxtCompanyNameError('');
+                          }
+                        }}
+                        isrequired={true}
+                        errorMessage={txtCompanyNameError !== '' && true}
+                      />
+
+                    </View>
+                    <View style={{ width: '47%', marginHorizontal: 10 }}>
+
+                      <TextInputs
+                        value={txtGstNumber}
+                        title={"GST Number (Optional)"}
+                        placeHolder={"GST Number (Optional)"}
+                        onChangeText={text => {
+                          setTxtGstNumber(text);
+                        }}
+                      />
+                    </View>
+                  </View>}
+                  {txtCompanyNameError !== '' && <Text style={styles.errorStyle}>{txtCompanyNameError}</Text>}
 
                 </ScrollView>
               </View>

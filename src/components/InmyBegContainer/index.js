@@ -8,12 +8,12 @@ import appColors from '../../themes/appColors';
 const InmyBegContainer = ({productlength}) => {
   return (
     <View>
-      <View style={[external.mh_25,{flexDirection:'row',justifyContent:'space-between'}]}>
+      <View style={[external.mh_20,{flexDirection:'row',justifyContent:'space-between'}]}>
         <View style={{flexDirection:'row',alignItems: "center",flex:1}}>
           <Text style={styles.valueText}>
             {`Your Cart`}
           </Text>
-          <Text>
+          <Text style={[fontSizes.FONT17]}>
             {`(${productlength || 0} products)`}
           </Text>
           </View>
@@ -38,16 +38,16 @@ const styles = StyleSheet.create({
   },
   valueText: {
     fontSize: fontSizes.FONT19,
-    fontFamily: appFonts.semiBold,
+    fontFamily: appFonts.bold,
     fontWeight: '600',
     color: appColors.titleText,
-    marginRight: windowHeight(8),
+    marginRight: windowHeight(4),
   },
 
 
   semiboldText: {
     color: appColors.titleText,
-    fontSize: fontSizes.FONT12,
+    fontSize: fontSizes.FONT14,
     fontFamily: appFonts.medium,
   },
 

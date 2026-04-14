@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
   nameText: {
     ...commonStyles.FONT19,
     ...external.ti_center,
+    fontSizes: fontSizes.FONT17,
     paddingTop: windowHeight(3),
   },
   grayBorder: {
@@ -112,7 +113,8 @@ const styles = StyleSheet.create({
       fontFamily: appFonts.regular,
     },
     tabTextActive: {
-      fontFamily: appFonts.semiBold,
+      ...commonStyles.titleText19,
+      fontFamily: appFonts.regular,
       fontSize: fontSizes.FONT10,
       color: appColors.primary,
     },

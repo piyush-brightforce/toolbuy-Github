@@ -9,8 +9,7 @@ const styles = StyleSheet.create({
 	container: {
 		...external.fd_row,
 		...external.ai_center,
-		...external.js_space,
-		...external.ph_5
+		...external.js_space, 
 	},
 	Header: {
 		backgroundColor: appColors.primary,

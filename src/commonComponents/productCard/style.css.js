@@ -66,13 +66,13 @@ const styles = StyleSheet.create({
 		marginRight: windowHeight(8),
 	},
 	originalPrice: {
-		fontSize: fontSizes.FONT15,
+		fontSize: fontSizes.FONT17,
 		fontFamily: appFonts.regular,
 		color: appColors.subtitle,
 		textDecorationLine: 'line-through',
 	},
 	discountText: {
-		fontSize: fontSizes.FONT13,
+		fontSize: fontSizes.FONT17,
 		fontFamily: appFonts.medium,
 		fontWeight: '500',
 		color: appColors.red,

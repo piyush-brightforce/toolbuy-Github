@@ -8,6 +8,7 @@ import styles from './style.css';
 import appColors from '../../../themes/appColors';
 import CartIconWithBadge from '../../../commonComponents/cartIconWithbadge';
 import { useValues } from '../../../../App';
+import { commonStyles } from '../../../style/commonStyle.css';
 
 const BackIcon = ({ onPress }) => (
 	<IconBackground
@@ -23,7 +24,7 @@ const HeaderRightIcons = ({ showSearch = true, navigation }) => (
 				onPress={() => navigation.navigate('SearchScreen',{
 						isFrom: "Home",
 					})}
-				value={<SearchIconG color={appColors.textColorWhite} />}
+				value={<SearchIconG height={26} width={26}  color={appColors.textColorWhite} />}
 			/>
 		)}
 		<CartIconWithBadge/>
@@ -32,12 +33,10 @@ const HeaderRightIcons = ({ showSearch = true, navigation }) => (
 
 const ProductHeaderContainer = ({ onPress, title = "", type = "", righticon = true, searhcPlaceHolder  }) => {
 	const navigation = useNavigation();
-	 const { linearColorStyle, linearColorStyleTwo, textRTLStyle, viewRTLStyle, imageRTLStyle, t, iconColorStyle } =
-			useValues();
 	 
 
 	return (
-		<View style={[styles.Header, styles.container, external.ai_center]}>
+		<View style={[commonStyles.Header, styles.container, external.ai_center,onPress ? external.pr_15: external.ph_20]}>
 			{type === `title` && (
 				<>
 					<View style={[external.fd_row, external.ai_center, external.fx_1]}>
@@ -63,7 +62,7 @@ const ProductHeaderContainer = ({ onPress, title = "", type = "", righticon = tr
 					})}>
 								<View style={[styles.searchContainer]}>
 									<TextInput
-										placeholder={searhcPlaceHolder || t("transData.SEARCH_PLACEHOLDER")}
+										placeholder={searhcPlaceHolder || "What are you looking for today?"}
 										placeholderTextColor={appColors.subtitle}
 										style={styles.searchText}
 										aria-label='center'

@@ -280,6 +280,8 @@ const EditProfile = () => {
               validateBussinessname();
               setBussinessnameTyping(false);
             }}
+
+                     errorMessage={bussinessnameError !== '' && true}
           />
         }
         {activeTab === "Business Account" && bussinessnameError !== '' && (
@@ -302,6 +304,8 @@ const EditProfile = () => {
             validateFullname();
             setFullnameTyping(false);
           }}
+
+                     errorMessage={fullnameError !== '' && true}
         />
         {fullnameError !== '' && (
           <Text style={styles.errorStyle}>{fullnameError}</Text>

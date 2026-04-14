@@ -10,11 +10,14 @@ import ProductContainer1 from '../../components/categoryContainer/productContain
 
 const CategoryScreen = ({ route }) => {
 
+	const {isfrom} = route?.params || {};
+	const navigation = useNavigation();
+
 	const { bgFullStyle } = useValues();
 
 	return (
 		<View style={[commonStyles.commonContainer, { backgroundColor: bgFullStyle }]}>
-			<ProductHeaderContainer title={"Categories"} type='title' />
+			{isfrom ? <ProductHeaderContainer title={"Categories"} type='title' onPress={()=> navigation.goBack()}/>:<ProductHeaderContainer title={"Categories"} type='title' />}
 
 			<ProductContainer1/>
 		</View>

@@ -19,7 +19,7 @@ const CartIconWithBadge = () => {
 						isFrom: "Home",
 					})}
 					value={<View style={styles.iconContainer}>
-						<CartIconG color={appColors.textColorWhite} />
+						<CartIconG height={26} width={26} color={appColors.textColorWhite} />
 
 						{/* Badge */}
 						<View style={styles.badge}>

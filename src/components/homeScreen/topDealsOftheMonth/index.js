@@ -130,7 +130,7 @@ const TopDealOfTheMonthContainer = () => {
           </Text>
         </Text>
         <TouchableOpacity onPress={() => handleOnProductDetails(product)}>
-          <Text style={styles.seeAllText}>{t('transData.seeAll')}</Text>
+          <Text style={styles.seeAllText}>{"View"}</Text>
         </TouchableOpacity>
       </View>
       <RenderItem key={product?.code}/>

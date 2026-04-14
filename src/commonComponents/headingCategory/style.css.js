@@ -9,7 +9,7 @@ const styles = StyleSheet.create({
   },
   valueText: {
     fontSize: fontSizes.FONT19,
-    fontFamily: appFonts.semiBold,
+    fontFamily: appFonts.bold,
     fontWeight: '600',
     color: appColors.titleText,
     marginRight: windowHeight(8),
@@ -18,8 +18,8 @@ const styles = StyleSheet.create({
 
   seeAllText: {
     color: appColors.primary,
-    fontSize: fontSizes.FONT14,
-    fontFamily: appFonts.semiBold,
+    fontSize: fontSizes.FONT19,
+    fontFamily: appFonts.regular,
   },
 });
 

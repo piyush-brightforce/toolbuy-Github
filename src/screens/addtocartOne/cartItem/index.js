@@ -95,9 +95,7 @@ const CartListItemContainer = ({ data, value, show, showPlus, marginTop, onSendD
                 style={[styles.imageContainer]}>
 
                 {item?.productImagePath?.endsWith('.svg') ? (
-                  <FixedSvgFromUrl
-                    width={windowWidth(76)}
-                    height={windowWidth(45)}
+                  <FixedSvgFromUrl 
                     uri={`${IMAGE_CONFIG.BASE_URL}/${item?.productImagePath}`}
                   />
 
@@ -166,7 +164,26 @@ const CartListItemContainer = ({ data, value, show, showPlus, marginTop, onSendD
                   </Text>
 
                 </View>
+                <View
+                  style={[styles.ratingContainer, { flexDirection: viewRTLStyle }]}>
+                  <Text
+                    style={[
+                      styles.headerTitle,
+                      { color: textColorStyle },
+                      { textAlign: textRTLStyle },
+                    ]}>
+                    {`Grade : `}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.mediumTitle,
+                      { color: textColorStyle },
+                      { textAlign: textRTLStyle },
+                    ]}>
+                     
+                  </Text>
 
+                </View>
               </View>
             </View>
             <View style={[styles.percentageContainer,]}>
@@ -181,7 +198,7 @@ const CartListItemContainer = ({ data, value, show, showPlus, marginTop, onSendD
                   activeOpacity={0.7}
                   style={[styles.quantityButton]}
                 > 
-                <View style={{height:15,width:15}}></View>
+                <View style={{height:windowHeight(16),width:windowHeight(16)}}></View>
                 </TouchableOpacity>
                 <View style={styles.quantityValueContainer}>
                   <ActivityIndicator color={appColors.textColorBlack}/>
@@ -191,7 +208,7 @@ const CartListItemContainer = ({ data, value, show, showPlus, marginTop, onSendD
                   activeOpacity={0.7}
                   style={styles.quantityButton}
                 > 
-                <View style={{height:15,width:15}}></View>
+                <View style={{height:windowHeight(16),width:windowHeight(16)}}></View>
                 </TouchableOpacity>
               </View>:  <View style={styles.quantityContainer}>
                 <TouchableOpacity
@@ -202,7 +219,7 @@ const CartListItemContainer = ({ data, value, show, showPlus, marginTop, onSendD
                   activeOpacity={0.7}
                   style={[styles.quantityButton]}
                 >
-                  <RemoveG color={textColorStyle} height={15} width={15} />
+                  <RemoveG color={textColorStyle} height={windowHeight(16)} width={windowHeight(16)} />
                 </TouchableOpacity>
                 <View style={styles.quantityValueContainer}>
                   <Text style={[styles.quantityValue,{color:textColorStyle}]}>
@@ -217,13 +234,14 @@ const CartListItemContainer = ({ data, value, show, showPlus, marginTop, onSendD
                   activeOpacity={0.7}
                   style={styles.quantityButton}
                 >
-                  <AddG color={textColorStyle} height={15} width={15} />
+                  <AddG color={textColorStyle} height={windowHeight(16)} width={windowHeight(16)} />
                 </TouchableOpacity>
               </View>}
 
                   
 
               <TouchableOpacity 
+                style={external.ml_5}
                   onPress={() => {
                     sendRemoveCartData(item?.shoppingCartID);
                   }}>

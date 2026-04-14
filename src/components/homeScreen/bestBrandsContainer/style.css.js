@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   title: {
     ...commonStyles.titleText19,
     fontSize: fontSizes.FONT17,
-    fontFamily: appFonts.semiBold,
+    fontFamily: appFonts.bold,
     fontWeight: '600',
   },
 
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   buttonText: {
     ...commonStyles.titleText19,
     fontSize: fontSizes.FONT17,
-    fontFamily: appFonts.semiBold,
+    fontFamily: appFonts.bold,
     fontWeight: '600',
     color: appColors.primary,
 

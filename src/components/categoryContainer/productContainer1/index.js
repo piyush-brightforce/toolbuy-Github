@@ -42,10 +42,8 @@ const ProductContainer1 = () => {
 
 	const onPressHandleShop = () => {
 		const lastObject = selectionArrayList?.length > 0 ? selectionArrayList[0] : {};
-		 
-		lastObject && navigation.navigate("ProductListing", {
-			item: lastObject
-		});
+		  
+		lastObject && navigation.navigate("CategoryDetail",{categoryCode:lastObject?.title,categoryname:lastObject?.categoryName});
 	}
 
 	const [expanded, setExpanded] = useState(null);

@@ -14,7 +14,7 @@ const commonStyles = StyleSheet.create({
 	},
 	subtitleText: {
 		fontWeight: '400',
-		fontSize: fontSizes.FONT17,
+		fontSize: fontSizes.FONT18,
 		lineHeight: windowHeight(18),
 		color: '#9BA6B8',
 		fontFamily: appFonts.regular,

@@ -73,9 +73,7 @@ const OrderSummaryListItemContainer = ({ data, value, show, showPlus, marginTop,
                 style={[styles.imageContainer]}>
 
                 {item?.productImagePath?.endsWith('.svg') ? (
-                  <FixedSvgFromUrl
-                    width={windowWidth(76)}
-                    height={windowWidth(45)}
+                  <FixedSvgFromUrl 
                     uri={`${IMAGE_CONFIG.BASE_URL}/${item?.productImagePath}`}
                   />
 

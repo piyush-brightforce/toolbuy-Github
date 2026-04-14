@@ -97,8 +97,8 @@ const ForgetPassword = ({ }) => {
 			</View>
        <View style={[styles.headingContainer, { backgroundColor: bgFullStyle }]}>
       <AuthContainer
-        title={t('transData.forgetPassword')}
-        subtitle={t('transData.forgetPasswordText')}
+        title={"Reset Your Password"}
+        subtitle={"Pop your email in the box below & we'll send you a link to reset your password."}
         value={
           <View>
             <TextInputs
@@ -118,7 +118,7 @@ const ForgetPassword = ({ }) => {
                 validateEmail();
                 setEmailTyping(false);
               }}
-               
+              errorMessage={emailError !== '' && true}
             />
 
             {emailError !== '' && (

@@ -14,7 +14,7 @@ const styles = StyleSheet.create({
     backgroundColor: appColors.screenBg,
     width: '100%',
     paddingVertical: windowHeight(14),
-    borderRadius: 10,
+    borderRadius: 20,
     paddingHorizontal: windowHeight(14),
   },
 });

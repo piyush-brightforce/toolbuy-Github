@@ -4,8 +4,8 @@ import appColors from '../../themes/appColors';
 const styles = StyleSheet.create({
   badge: {
     position: 'absolute',
-    right: -6,
-    top: -6,
+    right: -5,
+    top: -5,
     backgroundColor: appColors.primaryYellow,
     borderRadius: 10,
     minWidth: 18,

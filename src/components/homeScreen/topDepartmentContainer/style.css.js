@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
   title: {
     ...commonStyles.titleText19,
     fontSize: fontSizes.FONT17,
-    fontFamily: appFonts.semiBold,
+    fontFamily: appFonts.bold,
     fontWeight: '600',
     width: SCREEN_WIDTH * 0.25, 
   
@@ -129,8 +129,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         borderRadius: 100,
         width: SCREEN_WIDTH * 0.27, 
-        height: SCREEN_WIDTH * 0.27, 
-        ...external.mb_5,
+        height: SCREEN_WIDTH * 0.27,  
       },
 
       sidebarImage: {

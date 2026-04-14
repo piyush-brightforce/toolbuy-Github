@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
+    flexDirection: 'Column',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     fontFamily: appFonts.bold,
   },
   tab: {
-    paddingVertical: windowHeight(10),
+    paddingBottom: windowHeight(15),
     marginRight: windowWidth(20),
   },
   tabActive: {

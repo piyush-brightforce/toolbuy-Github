@@ -3,6 +3,7 @@ import {
 	Text,
 	Animated,
 	TouchableWithoutFeedback,
+	ActivityIndicator,
 } from 'react-native';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { commonStyles } from '../../../style/commonStyle.css';
@@ -26,6 +27,7 @@ import MultiSelectDropdown from './dropDown/multiselectiondropdown';
 import { getValue, PREFERENCE_KEY, setValue } from '../../../utils/helper/localStorage';
 import CartResponse from '../../../models/cart/cartresponse';
 import { ShoppingCartResponse } from '../../../models/cart/cartmodel';
+import { Cross } from '../../../utils/icon';
 
 const toArray = (val) => {
 	if (Array.isArray(val)) return val;
@@ -57,7 +59,7 @@ const ProductListing = ({ route }) => {
 	const [isSelectedSort, setIselectedSort] = useState(false);
 	const [isBestValueSelected, setIsBestValueSelected] = useState();
 	const [isSelectedSortValue, setIselectedSortValue] = useState('');
-	const slideAnim = useRef(new Animated.Value(300)).current;
+	const slideAnim = useRef(new Animated.Value(500)).current;
 	const slideAnim1 = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
 	//bottomSheet FilterValues
@@ -80,9 +82,10 @@ const ProductListing = ({ route }) => {
 		if (!hasMore || listloading) return;
 
 		const nextPage = pageNo + 1;
-		setPageNo(nextPage);
+		setlistloading(true);
 
 		await fetchProductListingData({ best: isBestValueSelected, price: priceFilter, pageindex: nextPage });
+		setPageNo(nextPage);
 	};
 
 	//  React to changes
@@ -99,7 +102,7 @@ const ProductListing = ({ route }) => {
 						categoryName: item.categoryName,
 						filterTitle: item.filterTitle
 					}
-				]; 
+				];
 				await fetchProductListingData({
 					best: isBestValueSelected, price: priceFilter, pageindex: pageNo,
 					customArray: initialArray
@@ -121,7 +124,6 @@ const ProductListing = ({ route }) => {
 
 		try {
 
-			setlistloading(true);
 			const sourceArray = customArray || newArrayList;
 
 			const lastValue = sourceArray?.length > 0
@@ -141,7 +143,7 @@ const ProductListing = ({ route }) => {
 					offer: "",
 					flag: "category",
 					PageNo: pageindex ? pageindex : pageNo,
-					pageSize: 32,
+					pageSize: 10,
 					orderBy: price,
 					filterKey: lastValue.filterKey,
 					filterValue: lastValue.filterValue + (best ? best : "") + (filterCategory ? filterCategory : "") + (filterBrand ? filterBrand : ""),
@@ -210,7 +212,7 @@ const ProductListing = ({ route }) => {
 
 			setIsLoaderLoading(false);
 
-			if (!model.result.listProduct || model.result.listProduct.length < 32) {
+			if (!model.result.listProduct || model.result.listProduct.length < 10) {
 				setHasMore(false);
 			}
 			setlistloading(false);
@@ -467,16 +469,18 @@ const ProductListing = ({ route }) => {
 
 	const openSheet = () => {
 		setIselectedSort(true);
+		 slideAnim.setValue(500); // reset position
+
 		Animated.timing(slideAnim, {
 			toValue: 0,
-			duration: 300,
+			duration: 500,
 			useNativeDriver: true,
 		}).start();
 	};
 
 	const closeSheet = () => {
 		Animated.timing(slideAnim, {
-			toValue: 300,
+			toValue: 500,
 			duration: 250,
 			useNativeDriver: true,
 		}).start(() => setIselectedSort(false));
@@ -603,8 +607,7 @@ const ProductListing = ({ route }) => {
 						<View style={styles.iconLayer}></View>
 					</View>
 				</View>
-				<Text numberOfLines={2}
-					ellipsizeMode="tail" style={[styles.title, { color: textColorStyle, alignSelf: "center", textAlign: 'center' }, [external.Pb_5, external.pt_5]]}>
+				<Text style={[styles.title, { color: textColorStyle, alignSelf: "center", textAlign: 'center' }, [external.Pb_5]]}>
 					{item.filterValue}
 				</Text>
 			</TouchableOpacity>
@@ -622,20 +625,20 @@ const ProductListing = ({ route }) => {
 
 			<FilterBar onPress={handleFilterPress} />
 
-			<View style={[external.mh_10]}>
+			<View >
 				<ScrollView
 					scrollEnabled={true}
-					alwaysBounceVertical={true} 
+					alwaysBounceVertical={true}
 					showsVerticalScrollIndicator={false}>
 
-					<View style={[external.mh_10]}>
+					<View style={[external.mh_15]}>
 						<ScrollView horizontal={true}                 // ✅ Horizontal scroll
 							showsHorizontalScrollIndicator={false}>
 							<View style={{ flexDirection: 'row' }}>
 								{filterCategoryProductList && <TouchableOpacity style={[
 									commonStyles.commonContainer,
-									external.m_5,
-									external.mt_20,
+									external.mv_5,external.mr_5,
+									external.mt_10,
 									{ alignItems: 'center' }
 
 								]} onPress={() => handleShopAll(lastShopAllValue)}>
@@ -666,7 +669,7 @@ const ProductListing = ({ route }) => {
 										</View>
 									</View>
 									{lastShopAllValue && <Text numberOfLines={2}
-										ellipsizeMode="tail" style={[styles.title, { color: textColorStyle, alignSelf: "center", textAlign: 'center' }, [external.Pb_5, external.pt_5]]}>
+										ellipsizeMode="tail" style={[styles.title, { color: textColorStyle, alignSelf: "center", textAlign: 'center' }, [external.Pb_5]]}>
 										{lastShopAllValue}
 									</Text>}
 								</TouchableOpacity>}
@@ -686,21 +689,34 @@ const ProductListing = ({ route }) => {
 		</View>
 	);
 
+	const renderFooter = () => {
+		if (!listloading) return null;
+
+		return (
+			<View style={{ paddingVertical: 20, alignItems: 'center' }}>
+				<ActivityIndicator size="large" color={appColors.primary} />
+			</View>
+		);
+	};
 
 	return (
 		<View style={{ flex: 1 }}>
 			<View style={[commonStyles.commonContainer, { backgroundColor: bgFullStyle }]}>
-				
+
 				<FlatList
 					data={categoryProductList || []}
 					renderItem={renderProductItem}
 					keyExtractor={(item) => item.productID.toString()}
 
-					ListHeaderComponent={renderHeader}
+					ListHeaderComponent={renderHeader({item:item})}
 
 					contentContainerStyle={{ paddingBottom: 80 }}
 
-					onEndReached={loadMore}
+					onEndReached={() => {
+						if (!listloading && hasMore) {
+							loadMore();
+						}
+					}}
 					onEndReachedThreshold={0.5}
 
 					initialNumToRender={8}
@@ -708,10 +724,13 @@ const ProductListing = ({ route }) => {
 					windowSize={5}
 					removeClippedSubviews={true}
 					showsVerticalScrollIndicator={false}
+					ListFooterComponent={renderFooter}
+
 				/>
 			</View>
-			{isSelectedSort && <View style={styles.bottomsheetContainer}>
-				<Modal transparent visible={isSelectedSort} animationType="none" >
+			{isSelectedSort && <Modal transparent visible={isSelectedSort} animationType="none" statusBarTranslucent >
+
+					<View style={{ flex: 1 }}>
 					<TouchableWithoutFeedback onPress={closeSheet}>
 						<View style={styles.bottomsheetoverlay} />
 					</TouchableWithoutFeedback>
@@ -726,12 +745,12 @@ const ProductListing = ({ route }) => {
 					>
 						{/* Header */}
 						<View style={styles.bottomsheetheader}>
-							<Text style={styles.bottomsheettitle}>Sort By</Text>
+							<Text style={[styles.bottomsheettitle,{textAlign:'center'}]}>Sort By</Text>
 							<TouchableOpacity onPress={() => {
 
 								closeSheet();
 							}}>
-								<Text style={styles.bottomsheetclose}>✕</Text>
+								<Cross height={26} width={26}/>
 							</TouchableOpacity>
 						</View>
 
@@ -763,13 +782,14 @@ const ProductListing = ({ route }) => {
 							<Text style={styles.bottomsheetbuttonText}>View Results</Text>
 						</TouchableOpacity>
 					</Animated.View>
-				</Modal>
 
+  					</View>
 
-			</View>}
-			{isSelectedFilter && <View style={styles.bottomsheetContainer}>
-				<Modal transparent statusBarTranslucent visible={isSelectedFilter} backgroundColor={"rgba(0,0,0,0.4)"} >
-					<TouchableWithoutFeedback onPress={closeFilterBottomSheet}>
+					
+				</Modal>}
+			{isSelectedFilter && <Modal transparent animationType="none" statusBarTranslucent visible={isSelectedFilter}  >
+					<View style={external.fx_1}>
+						<TouchableWithoutFeedback onPress={closeFilterBottomSheet}>
 						<View style={styles.bottomsheetoverlay} />
 					</TouchableWithoutFeedback>
 
@@ -781,12 +801,12 @@ const ProductListing = ({ route }) => {
 					>
 						{/* Header */}
 						<View style={styles.bottomsheetheader}>
-							<Text style={styles.bottomsheettitle}>All Filters</Text>
+							<Text style={[styles.bottomsheettitle,{textAlign:'center'}]}>All Filters</Text>
 							<TouchableOpacity onPress={() => {
 
 								closeFilterBottomSheet();
 							}}>
-								<Text style={styles.bottomsheetclose}>✕</Text>
+								<Cross height={26} width={26}/>
 							</TouchableOpacity>
 						</View>
 
@@ -851,10 +871,9 @@ const ProductListing = ({ route }) => {
 							<Text style={styles.bottomsheetbuttonText}>View Results</Text>
 						</TouchableOpacity>
 					</Animated.View>
+					</View>
 				</Modal>
-
-
-			</View>}
+}
 		</View>
 
 	);

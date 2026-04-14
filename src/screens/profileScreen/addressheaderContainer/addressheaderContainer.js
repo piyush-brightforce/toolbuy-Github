@@ -24,7 +24,7 @@ const HeaderRightIcons = ({ showSearch = true, navigation }) => (
                 onPress={() => navigation.navigate('SearchScreen',{
 						isFrom: "Home",
 					})}
-                value={<SearchIconG color={appColors.textColorWhite} />}
+                value={<SearchIconG height={26} width={26} color={appColors.textColorWhite} />}
             />
         )}
         <CartIconWithBadge/>
@@ -67,7 +67,7 @@ const AddressHeaderContainer = ({ onPress, title = "", type = "", righticon = tr
                         <View style={[styles.searchContent]}>
                             <View style={[styles.searchContainer]}>
                                 <TextInput
-                                    placeholder={searhcPlaceHolder || t("transData.SEARCH_PLACEHOLDER")}
+                                    placeholder={searhcPlaceHolder || "What are you looking for today?"}
                                     placeholderTextColor={appColors.subtitle}
                                     style={styles.searchText}
                                     aria-label='center'

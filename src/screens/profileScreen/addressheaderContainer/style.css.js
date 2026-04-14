@@ -14,7 +14,7 @@ const styles = StyleSheet.create({
     },
     Header: {
         backgroundColor: appColors.primary,
-        ...external.pv_5,
+        ...external.pv_15,
     },
     title: {
         ...commonStyles.H1Banner,

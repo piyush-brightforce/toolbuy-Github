@@ -22,6 +22,7 @@ import CheckBox from '../../../commonComponents/checkBox';
 import Toast from 'react-native-toast-message';
 import { VisibilityIconG } from '../../../assets/googleIcons/VisibilityIcongG';
 import { VisibilityOffIconG } from '../../../assets/googleIcons/VisibilityOff';
+import TermsAndConditionContainer from '../../../commonComponents/TermsAndConditionContainer';
 
 const SignUp = ({ }) => {
 
@@ -116,7 +117,7 @@ const SignUp = ({ }) => {
   const validateEmail = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setEmailError('Invalid email address');
+      setEmailError('Please enter a valid email address.');
       return false;
     } else {
       setEmailError('');
@@ -126,7 +127,7 @@ const SignUp = ({ }) => {
 
   const validateFullname = () => {
     if (!fullname || fullname.trim() === "") {
-      setFullnameError('Enter fullname');
+      setFullnameError('Please enter a valid full name.');
       return false;
     } else {
       setFullnameError('');
@@ -137,7 +138,7 @@ const SignUp = ({ }) => {
 
   const validateBussinessname = () => {
     if (!bussinessname || bussinessname.trim() === "") {
-      setBussinessname('Enter bussinessname');
+      setBussinessname('Please enter a valid business name.');
       return false;
     } else {
       setBussinessname('');
@@ -145,34 +146,12 @@ const SignUp = ({ }) => {
     }
   };
 
-
-  const validatePhone = () => {
-    const phoneRegex = /^\d{10}$/;
-    if (!phoneRegex.test(phone)) {
-      setPhoneError('Invalid phone number');
-      return false;
-    } else {
-      setPhoneError('');
-      return true;
-    }
-  };
-
   const validatePassword = () => {
     if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
+      setPasswordError('Please enter a valid password.');
       return false;
     } else {
       setPasswordError('');
-      return true;
-    }
-  };
-
-  const validateConfirmPassword = () => {
-    if (password !== confirmPassword) {
-      setConfirmPasswordError('Passwords do not match');
-      return false;
-    } else {
-      setConfirmPasswordError('');
       return true;
     }
   };
@@ -182,20 +161,17 @@ const SignUp = ({ }) => {
     setEmail('');
     setPassword('');
     setBussinessname('');
-    // setConfirmPassword('');
   };
 
   const onHandleChange = () => {
     const isEmailValid = validateEmail();
     const isFullnameValid = validateFullname();
     const isPasswordValid = validatePassword();
-    // const isConfirmPasswordValid = validateConfirmPassword();
 
     const isDisabled =
       !isEmailValid ||
       !isFullnameValid ||
       !isPasswordValid;
-    // || !isConfirmPasswordValid;
 
     setGetOtpDisabled(isDisabled);
 
@@ -223,11 +199,10 @@ const SignUp = ({ }) => {
                 ]}>
                 {"Account Type"}
               </Text>
-              <View style={[external.fd_row, { flexDirection: viewRTLStyle }]}>
+              <View style={[external.fd_row,external.mt_5, { flexDirection: viewRTLStyle }]}>
                 <TouchableOpacity
                   style={[
                     styles.tab,
-
                   ]}
                   onPress={() => setActiveTab('Personal Account')}>
                   <View style={[external.ai_center, external.fd_row]}>
@@ -265,17 +240,18 @@ const SignUp = ({ }) => {
               {activeTab === "Business Account" &&
                 <TextInputs
                   value={bussinessname}
-                  title={"Bussinessname"}
+                  title={"Bussiness Name"}
                   placeHolder={'Enter bussinessname'}
                   onChangeText={text => {
                     setBussinessname(text);
                     setBussinessnameTyping(true);
                     if (text.trim() === '') {
-                      setBussinessnameError('Fullname is required');
+                      setBussinessnameError('Please enter a valid business name.');
                     } else {
                       setBussinessnameError('');
                     }
                   }}
+                  errorMessage={bussinessnameError !== '' && true}
                   onBlur={() => {
                     validateBussinessname();
                     setBussinessnameTyping(false);
@@ -294,11 +270,13 @@ const SignUp = ({ }) => {
                   setFullname(text);
                   setFullnameTyping(true);
                   if (text.trim() === '') {
-                    setEmailError('Fullname is required');
+                    setFullnameError('Please enter a valid full name.');
                   } else {
-                    setEmailError('');
+                    setFullnameError('');
                   }
                 }}
+
+                errorMessage={fullnameError !== '' && true}
                 onBlur={() => {
                   validateFullname();
                   setFullnameTyping(false);
@@ -310,13 +288,13 @@ const SignUp = ({ }) => {
 
               <TextInputs
                 value={email}
-                title={t('transData.emailId')}
+                title={"Email Address"}
                 placeHolder={t('transData.enterEmail')}
                 onChangeText={text => {
                   setEmail(text);
                   setEmailTyping(true);
                   if (text.trim() === '') {
-                    setEmailError('Email is required');
+                    setEmailError('Please enter a valid email address.');
                   } else {
                     setEmailError('');
                   }
@@ -325,37 +303,12 @@ const SignUp = ({ }) => {
                   validateEmail();
                   setEmailTyping(false);
                 }}
+                errorMessage={emailError !== '' && true}
               />
               {emailError !== '' && (
                 <Text style={styles.errorStyle}>{emailError}</Text>
               )}
 
-              {/* 
-
-            <TextInputs
-              title={t('transData.phoneNumber')}
-              placeHolder={t('transData.enterNumber')}
-              onChangeText={text => {
-                setPhone(text);
-                setCallTyping(true);
-                if (text.trim() === '') {
-                  setPhoneError('Phone number is required');
-                } else {
-                  setPhoneError('');
-                }
-              }}
-              onBlur={() => {
-                validatePhone();
-                setCallTyping(false);
-              }}
-              icon={
-                <Call color={isCallTyping ? '#051E47' : appColors.subtitle} />
-              }
-            />
-
-            {phoneError !== '' && (
-              <Text style={styles.errorStyle}>{phoneError}</Text>
-            )} */}
 
               <TextInputs
                 value={password}
@@ -365,7 +318,7 @@ const SignUp = ({ }) => {
                   setPassword(text);
                   setPwdTyping(true);
                   if (text.length < 6) {
-                    setPasswordError('Password must be at least 6 characters');
+                    setPasswordError('Please enter a valid password.');
                   } else {
                     setPasswordError('');
                   }
@@ -377,54 +330,21 @@ const SignUp = ({ }) => {
                 show={true}
                 secureEntryValue={secure}
                 rightIcon={<TouchableOpacity
-                  style={styles.icon}
+                  style={[external.mr_5]}
                   onPress={() => setSecure(!secure)}
                 >
                   {secure ? <VisibilityIconG /> : <VisibilityOffIconG />}
                 </TouchableOpacity>}
+
+                errorMessage={passwordError !== '' && true}
               />
 
               {passwordError !== '' && (
                 <Text style={styles.errorStyle}>{passwordError}</Text>
               )}
 
-              {/* <TextInputs
-            value={confirmPassword}
-              title={t('transData.confirmPasswords')}
-              placeHolder={t('transData.reEnterPassword')}
-              onChangeText={text => {
-                setConfirmPassword(text);
-                setConfPwdTyping(true);
-                if (text !== password) {
-                  setConfirmPasswordError('Passwords do not match');
-                } else {
-                  setConfirmPasswordError('');
-                }
-              }}
-              onBlur={() => {
-                validateConfirmPassword();
-                setConfPwdTyping(false);
-              }}
-              icon={
-                <Key color={isConfTyping ? '#051E47' : appColors.subtitle} />
-              }
-            />
-
-            {confirmPasswordError !== '' && (
-              <Text style={styles.errorStyle}>{confirmPasswordError}</Text>
-            )} */}
             </View>
           }
-        />
-
-        {/* signup button */}
-        <NavigationButton
-          title={t('transData.signUp')}
-          color={appColors.screenBg}
-          onPress={onHandleChange}
-          disabled={isGetOtpDisabled}
-          backgroundColor={appColors.primary}
-          isLoading={isLoading}
         />
 
         {/* accept notification checkbox */}
@@ -438,15 +358,26 @@ const SignUp = ({ }) => {
             <CheckBox onPress={valData} checked={checkedData} />
             <Text
 
-              style={[commonStyles.subtitleText, { paddingLeft: 5, fontSize: fontSizes.FONT13 }]}
+              style={[commonStyles.subtitleText, { paddingLeft: 5, fontSize: fontSizes.FONT14 }]}
             >
               {"Send me emails about new arrivals, hot items, daily savings and more."}
             </Text>
           </View>
         </TouchableOpacity>
 
+        {/* signup button */}
+        <NavigationButton
+          title={t('transData.signUp')}
+          color={appColors.screenBg}
+          onPress={onHandleChange}
+          disabled={isGetOtpDisabled}
+          backgroundColor={appColors.primary}
+          isLoading={isLoading}
+        />
+
+
         {/* signin if registered */}
-        <View style={styles.singUpView}>
+        <View style={[styles.singUpView, external.mt_10]}>
           <Text style={[styles.tabText, { fontSize: fontSizes.FONT15 }]}>
             {t('transData.alreadyHaveAccount')}
           </Text>
@@ -463,38 +394,7 @@ const SignUp = ({ }) => {
         </View>
 
         {/* Terms conditions and privacy policy view */}
-        <View style={[styles.tandcView, external.mb_10, external.ai_center, external.js_center]}>
-          <Text style={[commonStyles.subtitleText, external.ti_center, { fontSize: fontSizes.FONT13, width: SCREEN_WIDTH / 1.4 }]}>
-            {"By signing in to Toolbuy.com, You're agreeing to our "}
-            <Text
-              style={[
-
-                commonStyles.titleText19,
-                { color: appColors.primary, fontSize: fontSizes.FONT14 },
-              ]}
-              onPress={() => navigation.navigate("WebViewContainer", {
-                url: "https://www.toolbuy.com/policy/terms-conditions",
-                title: "Terms and Conditions"
-              })}
-            >
-              {"Terms and Conditions "}
-              <Text
-                style={[commonStyles.subtitleText, { fontSize: fontSizes.FONT13 }
-                ]}>
-                {"and "}
-                <Text
-                  style={[
-                    commonStyles.titleText19,
-                    { color: appColors.primary, fontSize: fontSizes.FONT14 },
-                  ]}
-                  onPress={() => navigation.navigate("WebViewContainer", { url: "https://www.toolbuy.com/policy/privacy", title: "Privacy Policy" })}
-                >
-                  {"Privacy Policy"}
-                </Text>
-              </Text>
-            </Text>
-          </Text>
-        </View>
+        <TermsAndConditionContainer />
       </View>
 
     </View>

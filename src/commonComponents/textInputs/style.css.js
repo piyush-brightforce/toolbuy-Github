@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
   textInputView: {
     width: '100%',
     backgroundColor: '#FFFFFF',
-    marginTop: windowHeight(6),
+    marginTop: windowHeight(4),
     borderRadius: windowHeight(5),
     ...external.fd_row,
     ...external.ai_center,
@@ -41,9 +41,9 @@ const styles = StyleSheet.create({
   },
   withoutShow: {
     height: windowHeight(40),
-    marginTop: windowHeight(4),
+    marginTop: windowHeight(6),
     borderRadius: windowHeight(5),
-    elevation: 1,
+    elevation: 2,
     flexDirection: 'row',
     alignItems: 'center',
     padding: 1,
@@ -57,3 +57,5 @@ const styles = StyleSheet.create({
 });
 
 export default styles;
+
+

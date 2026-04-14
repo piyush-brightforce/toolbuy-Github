@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
 		marginBottom: windowHeight(4),
 		fontFamily: appFonts.bold,
 		fontSize: fontSizes.FONT17,
-	  },
+	},
 	brandText: {
 		...commonStyles.titleText19,
 		fontSize: fontSizes.FONT18,
@@ -44,12 +44,12 @@ const styles = StyleSheet.create({
 		width: windowWidth(100),
 	},
 	visitStoreText: {
-		fontSize: fontSizes.FONT21,
+		fontSize: fontSizes.FONT18,
 		lineHeight: windowHeight(22),
 		fontWeight: '600',
 		fontFamily: appFonts.bold,
 		color: appColors.primary,
-		paddingLeft:windowWidth(15)
+		paddingLeft: windowWidth(15)
 	},
 	imageContainer: {
 		marginTop: windowHeight(15),
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
 		borderRadius: windowHeight(10),
 	},
 	mainImage: {
-		// width: SCREEN_WIDTH,
+		width: SCREEN_WIDTH,
 		height: SCREEN_WIDTH,
 		resizeMode: 'contain',
 		alignItems: 'center',
@@ -100,8 +100,8 @@ const styles = StyleSheet.create({
 		backgroundColor: appColors.screenBg,
 		alignItems: 'center',
 		justifyContent: 'center',
-		marginBottom: windowHeight(10), 
-		marginRight:windowHeight(5),
+		marginBottom: windowHeight(10),
+		marginRight: windowHeight(5),
 		elevation: 2,
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 2 },
@@ -147,10 +147,13 @@ const styles = StyleSheet.create({
 		...commonStyles.subtitleText,
 		fontSize: fontSizes.FONT15,
 	},
-	priceText: {
-		...commonStyles.titleText19,
-		fontSize: fontSizes.FONT20,
-		fontFamily: appFonts.semiBold,
+	priceText: { 
+		fontSize: fontSizes.FONT30,
+		fontFamily: appFonts.bold,
+		color: appColors.titleText, 
+  lineHeight: fontSizes.FONT30 * 1.2,
+  includeFontPadding: false,
+  textAlignVertical: "center",
 	},
 	mrpText: {
 		...commonStyles.subtitleText,
@@ -166,12 +169,12 @@ const styles = StyleSheet.create({
 	},
 	saveText: {
 		...commonStyles.titleText19,
-		fontSize: fontSizes.FONT15,
+		fontSize: fontSizes.FONT18,
 		color: appColors.red,
 		fontFamily: appFonts.medium,
 	},
 	documentItem: {
-		alignItems: 'center', 
+		alignItems: 'center',
 		flex: 1,
 	},
 	documentIcon: {
@@ -180,8 +183,8 @@ const styles = StyleSheet.create({
 		paddingRight: windowWidth(5)
 	},
 	benefitItem: {
-		
-    	flexWrap: 'wrap',
+
+		flexWrap: 'wrap',
 
 		marginBottom: windowHeight(5),
 	},
@@ -202,10 +205,11 @@ const styles = StyleSheet.create({
 	tabText: {
 		...commonStyles.titleText19,
 		fontSize: fontSizes.FONT16,
-		fontFamily: appFonts.regular,
+		fontFamily: appFonts.bold,
 	},
 	tabTextActive: {
-		fontFamily: appFonts.semiBold,
+		fontFamily: appFonts.bold,
+		fontSize: fontSizes.FONT16,
 		color: appColors.primary,
 	},
 	tabContent: {
@@ -269,14 +273,14 @@ const styles = StyleSheet.create({
 		...external.as_start,
 		borderRadius: windowHeight(30),
 		overflow: 'hidden',
-		
-	  borderWidth:1,
+
+		borderWidth: 1,
 		...external.p_5,
 		...external.ml_10
 	},
 	quantityButton: {
 		...external.ai_center,
-		...external.js_center, 
+		...external.js_center,
 		borderRadius: windowHeight(30),
 		backgroundColor: appColors.textColorBlack,
 		...external.p_5,
@@ -294,9 +298,9 @@ const styles = StyleSheet.create({
 		fontWeight: '600',
 		color: appColors.textColorWhite,
 	},
- 
+
 	outOfStockButton: {
-		
+
 		...external.ai_center,
 		...external.js_center,
 		borderWidth: 1,
@@ -315,36 +319,36 @@ const styles = StyleSheet.create({
 	},
 
 	// Quantity Selector
-		quantityContainer1: {
-			...external.fd_row,
-			...external.ai_center,
-			...external.as_start,
-			borderRadius: windowHeight(30),
-			overflow: 'hidden',
-			backgroundColor: appColors.primary,
-			...external.p_5,
-		},
-		quantityButton1: {
-			...external.ai_center,
-			...external.js_center,
-			backgroundColor: appColors.primaryDark,
-			borderRadius: windowHeight(30),
-			...external.p_5,
-		},
-		quantityValueContainer1: {
-			minWidth: windowWidth(85),
-			...external.ai_center,
-			...external.js_center,
-			...appColors.textColorWhite,
-			// paddingHorizontal: windowHeight(12),
-			// paddingVertical: windowHeight(10),
-		},
-		quantityValue1: {
-			fontSize: fontSizes.FONT18,
-			fontFamily: appFonts.medium,
-			fontWeight: '600',
-			color: appColors.textColorWhite,
-		},
+	quantityContainer1: {
+		...external.fd_row,
+		...external.ai_center,
+		...external.as_start,
+		borderRadius: windowHeight(30),
+		overflow: 'hidden',
+		backgroundColor: appColors.primary,
+		...external.p_5,
+	},
+	quantityButton1: {
+		...external.ai_center,
+		...external.js_center,
+		backgroundColor: appColors.primaryDark,
+		borderRadius: windowHeight(30),
+		...external.p_5,
+	},
+	quantityValueContainer1: {
+		minWidth: windowWidth(85),
+		...external.ai_center,
+		...external.js_center,
+		...appColors.textColorWhite,
+		// paddingHorizontal: windowHeight(12),
+		// paddingVertical: windowHeight(10),
+	},
+	quantityValue1: {
+		fontSize: fontSizes.FONT18,
+		fontFamily: appFonts.medium,
+		fontWeight: '600',
+		color: appColors.textColorWhite,
+	},
 });
 
 export default styles;

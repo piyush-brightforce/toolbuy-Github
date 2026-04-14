@@ -8,13 +8,9 @@ import { useNavigation } from '@react-navigation/native';
 
 
 const SearchContainer = ({ show, onSendData }) => {
-	const sendDataBack = (id) => {
-		onSendData(id ?? ""); // 👈 send to parent
-	};
 
 	const navigation = useNavigation(); 
-
-	const [loading, setLoading] = useState(false);
+ 
 	const { linearColorStyle, linearColorStyleTwo, textRTLStyle, viewRTLStyle, t } =
 		useValues();
 
@@ -29,13 +25,14 @@ const SearchContainer = ({ show, onSendData }) => {
 					<View style={[styles.menuItemContent]}>
 						<View style={[styles.searchContainer]}>
 							<TextInput
-								placeholder={t("transData.SEARCH_PLACEHOLDER")}
+								placeholder={"What are you looking for today?"}
 								placeholderTextColor={appColors.subtitle}
 								editable={false}
 								style={[
 									styles.searchText,
 									{ textAlign: textRTLStyle },
 								]}
+								
 							/>
 						</View>
 						<View style={styles.searchIconStyle}>

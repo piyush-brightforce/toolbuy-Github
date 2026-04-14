@@ -84,7 +84,7 @@ const ChangePasswordScreen = () => {
 
   const validatePassword = () => {
     if (password.length < 6) {
-      setPasswordError('Old Password must be at least 6 characters');
+      setPasswordError('Please enter a valid password.');
       return false;
     } else {
       setPasswordError('');
@@ -95,7 +95,7 @@ const ChangePasswordScreen = () => {
 
   const validateNewPassword = () => {
     if (newpassword.length < 6) {
-      setnewPasswordError('New Password must be at least 6 characters');
+      setnewPasswordError('Please enter a valid password.');
       return false;
     } else {
       setnewPasswordError('');
@@ -158,14 +158,14 @@ const ChangePasswordScreen = () => {
       <HeaderContainer value={t('transData.changePassword')} />
       <TextInputs
         value={password}
-        title={t('transData.currentPassword')}
+        title={"Current Password"}
         placeHolder={t('transData.enterYourOldPassword')}
         icon={<Key />}
         onChangeText={text => {
           setPassword(text);
           setPwdTyping(true);
           if (text.length < 6) {
-            setPasswordError('Password must be at least 6 characters');
+            setPasswordError('Please enter a valid password.');
           } else {
             setPasswordError('');
           }
@@ -174,6 +174,7 @@ const ChangePasswordScreen = () => {
           validatePassword();
           setPwdTyping(false);
         }}
+         errorMessage={passwordError !== '' && true}
       />
       {passwordError !== '' && (
         <Text style={styles.errorStyle}>{passwordError}</Text>
@@ -181,14 +182,14 @@ const ChangePasswordScreen = () => {
       <TextInputs
 
         value={newpassword}
-        title={t('transData.newPassword')}
+        title={"New Password"}
         placeHolder={t('transData.enterYourNewPassword')}
         icon={<Key />}
         onChangeText={text => {
           setnewPassword(text);
           setnewPwdTyping(true);
           if (text.length < 6) {
-            setnewPasswordError('Password must be at least 6 characters');
+            setnewPasswordError('Please enter a valid password.');
           } else {
             setnewPasswordError('');
           }
@@ -197,6 +198,7 @@ const ChangePasswordScreen = () => {
           validateNewPassword();
           setnewPwdTyping(false);
         }}
+         errorMessage={newpasswordError !== '' && true}
       />
       {newpasswordError !== '' && (
         <Text style={styles.errorStyle}>{newpasswordError}</Text>
@@ -204,7 +206,7 @@ const ChangePasswordScreen = () => {
       <TextInputs
 
         value={confirmpassword}
-        title={t('transData.confirmPasswords')}
+        title={"Confirm Password"}
         placeHolder={t('transData.reEnterPassword')}
         icon={<Key />}
         onChangeText={text => {
@@ -220,6 +222,7 @@ const ChangePasswordScreen = () => {
           validateConfirmPassword();
           setconfirmPwdTyping(false);
         }}
+         errorMessage={confirmpasswordError !== '' && true}
       />
       {confirmpasswordError !== '' && (
         <Text style={styles.errorStyle}>{confirmpasswordError}</Text>

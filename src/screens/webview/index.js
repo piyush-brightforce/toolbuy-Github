@@ -10,19 +10,10 @@ import { useNavigation } from "@react-navigation/native";
 
 
 const WebViewContainer = ({ route }) => {
-  const { url, title } = route.params;
-  const navigation = useNavigation();
+  const { url, title } = route.params; 
   return (
     <View style={[external.fx_1,{backgroundColor:appColors.primary}]}>
-      <View style={[external.fd_row,external.ai_center]}>
-        <IconBackground
-          value={<ChevronLeft height={28} width={28} color={appColors.textColorWhite} />}
-          onPress={() => navigation.goBack()}
-        />
-         <View style={[external.ml_5]}>
-                            <Text style={[styles.title]}>{title}</Text>
-                        </View>
-      </View>
+      
       <View style={{ flex: 1 }}>
         <WebView source={{ uri: url }} />
       </View>

@@ -9,11 +9,11 @@ const styles = StyleSheet.create({
 
   title: {
     ...commonStyles.titleText19,
-    fontSize: fontSizes.FONT17,
+    fontSize: fontSizes.FONT15,
     fontFamily: appFonts.semiBold,
     fontWeight: '600',
     width: SCREEN_WIDTH * 0.25,
-
+    lineHeight:windowHeight(16)
   },
 
   fullScreen: {
@@ -73,10 +73,14 @@ const styles = StyleSheet.create({
 
   // bottomsheet
 
-  bottomsheetoverlay: { 
-    flex:1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
+ bottomsheetoverlay: {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(0,0,0,0.4)',
+},
   
   bottomView: {
     // backgroundColor: "#fff",
@@ -85,7 +89,10 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
   },
 
-  bottomsheetContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  bottomsheetContainer: { 
+    flex: 1,
+  backgroundColor: 'transparent'
+},
 
   bottomSheetAnimatedView: {
     position: "absolute",
@@ -95,20 +102,21 @@ const styles = StyleSheet.create({
     backgroundColor: appColors.textColorWhite,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 20,
+    ...external.ph_10,
+    ...external.pv_15,
     overflow: "hidden", 
   },
 
    sortbottomSheetAnimatedView: {
     position: "absolute",
     bottom: 0,
-    width: "100%",
-    height: "50%",
+    width: "100%", 
     backgroundColor: appColors.textColorWhite,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 20,
-    overflow: "hidden", 
+    ...external.ph_10,
+    ...external.pv_15,
+    maxHeight: '100%'
   },
  
   bottomsheetBackground: {
@@ -122,8 +130,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   bottomsheettitle: {
-    fontSize: 20,
+    fontSize: fontSizes.FONT19,
     fontWeight: "600",
+    color:appColors.titleText,
+    ...external.fx_1,
+    ...external.ai_center,
   },
   bottomsheetclose: {
     fontSize: 22,
@@ -154,7 +165,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#1E5BB8",
   },
   bottomsheetoptionText: {
-    fontSize: 16,
+    fontSize: fontSizes.FONT15,
+    color:appColors.titleText
   },
   bottomsheetbutton: {
     backgroundColor: "#1E5BB8",
@@ -166,7 +178,7 @@ const styles = StyleSheet.create({
   },
   bottomsheetbuttonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: fontSizes.FONT18,
     fontWeight: "600",
   }, 
 });

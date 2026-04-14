@@ -4,11 +4,7 @@ import MyTabs from '../myTab';
 import { useValues } from '../../App';
 import { windowHeight, windowWidth } from '../themes/appConstant';
 import DrawerContent from './drawerContent';
-import HomeScreenTwo from '../screens/homeScreenTwo';
-import HomeScreen from '../screens/homeScreen';
-import axios from 'axios';
-import API_URL from '../config/apiConfig';
-import { ShoppingCartResponse } from '../models/cart/cartmodel';
+import HomeScreenTwo from '../screens/homeScreenTwo'; 
 
 const Drawer = createDrawerNavigator();
 

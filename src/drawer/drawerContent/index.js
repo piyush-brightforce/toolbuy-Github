@@ -20,7 +20,7 @@ import LoginResponseModel from '../../models/login/loginresponsemodel';
 const DrawerContent = (props) => {
 	const { isDark, menuContent, setMenuContent } = useValues();
 	const navigation = useNavigation();
-
+	
 	const [categoryContent, setCategoryContent] = useState({ item: {}, data: [] });
 	const [categoryItems, setCategoryItems] = useState({ item: {}, data: [] });
 
@@ -185,12 +185,12 @@ const DrawerContent = (props) => {
 		<View style={[external.fx_1]}>
 			<View style={styles.containerStyle}>
 				{userResponse && <View style={[external.fd_row, external.ai_start, external.ph_10]} alignItems='center'>
-					<AccountCircle height={22} width={22} color={appColors.textColorWhite} />
-					<Text style={styles.signInStyle}>{userResponse.FullName} Account</Text>
+					<AccountCircle height={26} width={26} color={appColors.textColorWhite} />
+					<Text style={styles.signInStyle}>{userResponse.FullName}</Text>
 				</View>}
 				{!userResponse && <TouchableOpacity style={styles.item} onPress={() => navigation.navigate('Login')}>
 					<View style={[external.fd_row, external.ai_start, external.ph_10]} alignItems='center'>
-						<AccountCircle height={22} width={22} color={appColors.textColorWhite} />
+						<AccountCircle height={26} width={26} color={appColors.textColorWhite} />
 						<Text style={styles.signInStyle}>Sign In or Create Account</Text>
 					</View>
 				</TouchableOpacity>}

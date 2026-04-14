@@ -19,15 +19,15 @@ const styles = StyleSheet.create({
     margin: 1,
   },
   imageContainer: {
-    height: windowHeight(70),
-    width: windowWidth(108), 
+    height: windowHeight(100),
+    width: windowWidth(100), 
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   image: {
-    width: windowWidth(76),
-    height: windowHeight(45),
+    width: windowWidth(100),
+    height: windowHeight(100),
     resizeMode: 'contain',
   },
   textContainer: {
@@ -42,12 +42,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: { 
     color: appColors.titleText,
-    fontSize: fontSizes.FONT14,
+    fontSize: fontSizes.FONT16,
     fontFamily: appFonts.bold
   },
   mediumTitle: { 
     color: appColors.titleText,
-    fontSize: fontSizes.FONT14,
+    fontSize: fontSizes.FONT16,
     fontFamily: appFonts.regular
   },
   ratingContainer: {
@@ -72,12 +72,12 @@ const styles = StyleSheet.create({
   price: {
     ...commonStyles.titleText19,
     fontSize: fontSizes.FONT19,
-    fontFamily: appFonts.semiBold,
+    fontFamily: appFonts.bold,
     fontWeight: '600',
   },
   discountPercentage: {
     ...commonStyles.titleText19,
-    fontSize: fontSizes.FONT15,
+    fontSize: fontSizes.FONT17,
     fontFamily: appFonts.regular, 
     color: appColors.red
   },
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   },
   underlinePrice: {
     ...commonStyles.subtitleText,
-    fontSize: fontSizes.FONT15,
+    fontSize: fontSizes.FONT17,
     ...external.mh_2,
     textDecorationLine: 'line-through',
   },

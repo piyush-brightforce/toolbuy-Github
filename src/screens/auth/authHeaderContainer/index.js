@@ -2,7 +2,7 @@ import { Image, View } from 'react-native';
 import React from 'react';
 import { external } from '../../../style/external.css';
 import IconBackground from '../../../commonComponents/iconBackGround';
-import { Drawer, Notification, AccountCircle, Cross } from '../../../utils/icon';
+import {   Cross } from '../../../utils/icon';
 import { useNavigation } from '@react-navigation/native';
 import images from '../../../utils/images';
 import styles from './style.css';
@@ -24,11 +24,11 @@ const AuthHeaderContainer = () => {
 			
 				<IconBackground
 					onPress={() => navigation.goBack()}
-					value={<Cross color={appColors.textColorWhite} />}
+					value={<Cross height={26} width={26} color={appColors.textColorWhite} />}
 				/>
 			</View>
 		</View>
 	);
 };
 
-export default AuthHeaderContainer;
+export default AuthHeaderContainer; 

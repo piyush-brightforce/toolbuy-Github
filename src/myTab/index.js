@@ -24,6 +24,7 @@ import { PersonFill } from '../assets/googleIcons/PersonFill';
 import SearchingScreen from '../screens/homeScreen/search';
 import AddtocartOne from '../screens/addtocartOne';
 import MyAccountScreen from '../screens/myAccount';
+import OrderDashBoardScreen from '../screens/myAccount/orderDashBordScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -145,8 +146,8 @@ const MyTabs = () => {
 				}}
 			/>
 			<Tab.Screen
-				name="MyAccountScreen"
-				component={MyAccountScreen}
+				name="OrderDashBoardScreen"
+				component={OrderDashBoardScreen}
 				options={{
 					tabBarLabel: `${t('transData.MY_ACCOUNT')}`,
 					tabBarIcon: () => <PersonIconG {...tabIconSize} />,

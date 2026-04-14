@@ -102,7 +102,7 @@ overlay: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    ...external.Pb_10
   },
   title: {
     fontSize: 18,
@@ -111,9 +111,7 @@ overlay: {
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 0.5,
-    borderColor: '#ddd',
+    ...external.pv_10,
   },
   label: {
     fontSize: 16,

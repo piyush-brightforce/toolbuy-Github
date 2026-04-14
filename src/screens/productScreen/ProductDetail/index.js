@@ -15,7 +15,7 @@ import BottomContainer from '../../../commonComponents/bottomContainer';
 import { commonStyles } from '../../../style/commonStyle.css';
 import { windowWidth, fontSizes, SCREEN_WIDTH, windowHeight, SCREEN_HEIGHT } from '../../../themes/appConstant';
 import { external } from '../../../style/external.css';
-import { Heart, KeyboardDoubleArrowRight, RemoveG, AddG, Cross, Favorite } from '../../../utils/icon';
+import { KeyboardDoubleArrowRight, RemoveG, AddG, Cross, Favorite, ChevronForward } from '../../../utils/icon';
 import styles from './style.css';
 import { Cart } from '../../../assets/icons/cart';
 import { useValues } from '../../../../App';
@@ -28,7 +28,7 @@ import { ProductDetailResponseModel } from '../../../models/productDetails/produ
 import RenderHtml from 'react-native-render-html';
 import appFonts from '../../../themes/appFonts';
 import { getValue, PREFERENCE_KEY, setValue } from '../../../utils/helper/localStorage';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import CartResponse from '../../../models/cart/cartresponse';
 import CommonModal from '../../../commonComponents/commonModel';
 import YoutubePlayer from "react-native-youtube-iframe";
@@ -49,6 +49,9 @@ import { PurchaseListResponse } from '../../../models/purchaselist/purchaselistm
 import TextInputs from '../../../commonComponents/textInputs';
 import DynamicDropdown1 from '../../../commonComponents/dynamicDropdown/dynamicDropdown1';
 import { FavoriteFillG } from '../../../assets/googleIcons/FavouriteFill';
+
+import Carousel from 'react-native-snap-carousel';
+import { AddShoppingCartG } from '../../../assets/googleIcons/AddShoppingCart';
 
 const ProductDetail = ({ route }) => {
 
@@ -106,6 +109,21 @@ const ProductDetail = ({ route }) => {
 			policy: 'Full refund or replacement',
 		},
 	];
+
+
+	const scrollRef = useRef(null);
+	const targetRef = useRef(null);
+	const carouselRef = useRef(null);
+	const imageflatListRef = useRef(null);
+	const scrollToView = () => {
+		targetRef.current.measureLayout(
+			scrollRef.current,
+			(x, y) => {
+				scrollRef.current.scrollTo({ y, animated: true });
+			},
+			(error) => console.log(error)
+		);
+	};
 
 	const navigation = useNavigation();
 	const { product } = route.params || {};
@@ -410,61 +428,71 @@ const ProductDetail = ({ route }) => {
 	};
 
 
-	const selectedImageHandle = async (item) => {
-		setSelectedImage(item);
+	const selectedImageHandle = async (index) => {
+		setSelectedImage(index);
+		carouselRef.current?.snapToItem(index);
+
+		imageflatListRef.current?.scrollToIndex({
+			index,
+			animated: true,
+			viewPosition: 0.5, // center it
+		});
 	};
 
-	const renderImageItem = ({ item, index }) => (
-		<TouchableOpacity
-			style={[
-				{
-					marginTop: 10,
-					marginBottom: 10,
-					borderWidth: 1,
-					borderColor: "#ccc",   // default border
-					borderRadius: 10,
-					height: 60, width: 60,
-					justifyContent: "center",   // vertical center
-					alignItems: "center",
-					marginRight: 10
-				},
-				selectedImage === index && {
-					borderColor: appColors.primary, // change only border color
-				}
-			]}
-			onPress={() => selectedImageHandle(index)}
-		>
-			<View>
-				{item?.imagePath && item?.imagePath !== 'noimage.jpg' && item?.imagePath?.endsWith('.svg') ? (
-					<FixedSvgFromUrl
-						height={40}
-						width={40}
-						resizeMode={'contain'}
-						uri={`${IMAGE_CONFIG.BASE_URL}/${item?.imagePath}`}
-					/>
+	const renderImageItem = ({ item, index }) => {
+		const isActive = index === selectedImage;
+		return (
 
-				) : <Image
-					style={{
-						resizeMode: 'contain',
-						alignItems: 'center',
-						justifyContent: 'center',
-						height: 40,
-						width: 40
-					}}
-					source={
-						item?.imagePath && item?.imagePath !== 'noimage.jpg'
-							? { uri: `${IMAGE_CONFIG.BASE_URL}/${item?.imagePath}` }
-							: require('../../../assets/images/homeScreenOne/placeholder.jpeg')
+			<TouchableOpacity
+				style={[
+					{
+						marginTop: 10,
+						marginBottom: 10,
+						borderWidth: 1,
+						borderColor: "#ccc",   // default border
+						borderRadius: 10,
+						height: 45, width: 45,
+						justifyContent: "center",   // vertical center
+						alignItems: "center",
+						marginRight: 10, overflow: 'hidden'
+					},
+					isActive && {
+						borderColor: appColors.primary, // change only border color
 					}
-				/>}
-			</View>
-		</TouchableOpacity>
-	);
+				]}
+				onPress={() => selectedImageHandle(index)}
+			>
+				<View>
+					{item?.imagePath && item?.imagePath !== 'noimage.jpg' && item?.imagePath?.endsWith('.svg') ? (
+						<FixedSvgFromUrl
+							height={45}
+							width={45}
+							resizeMode={'contain'}
+							uri={`${IMAGE_CONFIG.BASE_URL}/${item?.imagePath}`}
+						/>
 
+					) : <Image
+						style={{
+							resizeMode: 'contain',
+							alignItems: 'center',
+							justifyContent: 'center',
+							height: 45,
+							width: 45
+						}}
+						source={
+							item?.imagePath && item?.imagePath !== 'noimage.jpg'
+								? { uri: `${IMAGE_CONFIG.BASE_URL}/${item?.imagePath}` }
+								: require('../../../assets/images/homeScreenOne/placeholder.jpeg')
+						}
+					/>}
+				</View>
+			</TouchableOpacity>
+		)
+	};
 
-
-	if (isGSTDialogVisible)
-		return (<Modal
+ 
+	return (<View style={{ flex: 1 }}>
+		 {isGSTDialogVisible && <Modal
 			transparent
 			visible={isGSTDialogVisible}
 			animationType="fade"
@@ -525,12 +553,8 @@ const ProductDetail = ({ route }) => {
 				</View>
 			</TouchableWithoutFeedback>
 
-		</Modal>
-		);
-
-
-	if (isCustomerServiceVisible)
-		return (<Modal
+		</Modal>}
+		{isCustomerServiceVisible && <Modal
 			transparent
 			visible={isCustomerServiceVisible}
 			animationType="fade"
@@ -614,12 +638,8 @@ const ProductDetail = ({ route }) => {
 				</View>
 			</TouchableWithoutFeedback>
 
-		</Modal>
-		);
-
-
-	if (isReturnWarrantyDialogVisible)
-		return (<Modal
+		</Modal>}
+		{isReturnWarrantyDialogVisible && <Modal
 			transparent
 			visible={isReturnWarrantyDialogVisible}
 			animationType="fade"
@@ -707,11 +727,8 @@ const ProductDetail = ({ route }) => {
 				</View>
 			</TouchableWithoutFeedback>
 
-		</Modal>
-		);
-
-	if (isBuyinstallmentVisible)
-		return (<Modal
+		</Modal>}
+		{ isBuyinstallmentVisible && <Modal
 			transparent
 			visible={isBuyinstallmentVisible}
 			animationType="fade"
@@ -776,14 +793,11 @@ const ProductDetail = ({ route }) => {
 				</View>
 			</TouchableWithoutFeedback>
 
-		</Modal>
-		);
-
-	return (<View style={{ flex: 1 }}>
+		</Modal>}
 		{isOpenImageView && <CommonModal
 			isVisible={isOpenImageView}
 			value={
-				<View>
+				<View style={{ width: '100%' }}>
 					<View
 						style={[
 							external.fd_row,
@@ -814,7 +828,7 @@ const ProductDetail = ({ route }) => {
 								{`Images (${(productImages && productImages.length > 0) ? productImages.length : 0})`}
 							</Text>
 						</TouchableOpacity>
-						<TouchableOpacity
+						{productsDetails?.productMaster?.youtubeVideo && <TouchableOpacity
 							style={[
 								styles.tab,
 								activeImageTab === 'Video' && styles.tabActive,
@@ -826,39 +840,70 @@ const ProductDetail = ({ route }) => {
 									activeImageTab === 'Video' && styles.tabTextActive,
 									{ color: textColorStyle },
 								]}>
-								{"Video (1)"}
+								{`Video (${productsDetails?.productMaster?.youtubeVideo ? 1 : 0})`}
 							</Text>
-						</TouchableOpacity>
+						</TouchableOpacity>}
 					</View>
-					<ScrollView>
-						{activeImageTab === "Images" && <View style={[external.mv_10]}>
-							{(productImages && productImages.length > 0) &&
-								productImages[selectedImage]?.imagePath &&
-								productImages[selectedImage]?.imagePath !== 'noimage.jpg' &&
-								productImages[selectedImage]?.imagePath?.endsWith('.svg') ? <FixedSvgFromUrl
-								height={SCREEN_WIDTH * 0.7}
-								width={SCREEN_WIDTH}
-								resizeMode={'contain'}
-								uri={`${IMAGE_CONFIG.BASE_URL}/${productImages[selectedImage]?.imagePath}`}
-							/> : <Image
-								style={styles.mainImage}
-								resizeMode="contain"
-								source={
-									productImages[selectedImage]?.imagePath
-										? { uri: `${IMAGE_CONFIG.BASE_URL}/${productImages[selectedImage]?.imagePath}` }
-										: require('../../../assets/images/homeScreenOne/placeholder.jpeg')
-								}
-							/>}
+					<ScrollView contentContainerStyle={{ width: '100%' }}>
+						{activeImageTab === "Images" && <View style={[external.mv_10,{ width: '100%' }]}>
+							<Carousel
+							ref={carouselRef}
+							data={productImages || []}
+							renderItem={({ item}) => {
+								const imagePath = item?.imagePath;
+
+								const isSvg =
+									imagePath &&
+									imagePath !== 'noimage.jpg' &&
+									imagePath.endsWith('.svg');
+
+								return (
+									<TouchableOpacity>
+										{isSvg ? (
+											<FixedSvgFromUrl
+												height={SCREEN_WIDTH }
+												width={SCREEN_WIDTH}
+												resizeMode="contain"
+												uri={`${IMAGE_CONFIG.BASE_URL}/${imagePath}`}
+											/>
+										) : (
+											<Image
+												style={[styles.mainImage ]}
+												resizeMode="contain"
+												source={
+													imagePath
+														? { uri: `${IMAGE_CONFIG.BASE_URL}/${imagePath}` }
+														: require('../../../assets/images/homeScreenOne/placeholder.jpeg')
+												}
+											/>
+										)}
+									</TouchableOpacity>
+								);
+							}}
+							sliderWidth={SCREEN_WIDTH}
+							itemWidth={SCREEN_WIDTH}
+							autoplay={true}
+							autoplayInterval={5000}
+							loop
+							enableMomentum={true}
+
+							lockScrollWhileSnapping 
+							onSnapToItem={(index) => { 
+								selectedImageHandle(index);
+							}}
+
+						/>
 						</View>}
 						{activeImageTab === "Images" && (productImages && productImages.length > 0) && <FlatList
-							data={productImages}
-							renderItem={renderImageItem}
-							keyExtractor={(item, index) => index.toString()}
-							horizontal
-							contentContainerStyle={[external.mh_10,]}
-							showsHorizontalScrollIndicator={false}
-						/>}
-						{activeImageTab === "Video" && <View style={{ height: windowHeight(320), width: '100%' }}>
+					ref={imageflatListRef}
+					data={productImages}
+					renderItem={renderImageItem}
+					keyExtractor={(item, index) => index.toString()}
+					horizontal
+					contentContainerStyle={[external.mh_10,]}
+					showsHorizontalScrollIndicator={false}
+				/>}
+						{activeImageTab === "Video" && <View style={{  width: '100%' }}>
 							<Text
 								style={[
 									commonStyles.titleText19,
@@ -877,10 +922,15 @@ const ProductDetail = ({ route }) => {
 								Product Video
 							</Text>
 							{productsDetails?.productMaster?.youtubeVideo && <YoutubePlayer
-								height={220}
+								height={SCREEN_WIDTH * (9 / 16)}
+								width={SCREEN_WIDTH}
 								play={true}
 								videoId={getYoutubeId(productsDetails?.productMaster?.youtubeVideo)}
 							/>}</View>}
+
+							<View style={[external.mt_15,external.mb_10]}>
+								<SolidLine/>
+							</View>
 						{productsDetails?.productMaster?.qty === 0 ? <View style={styles.outOfStockButton}>
 							<Text style={styles.outOfStockText}>
 								{t('transData.OUT_OF_STOCK')}
@@ -912,7 +962,7 @@ const ProductDetail = ({ route }) => {
 							{isCartLoading ? <NavigationButton isLoading={isCartLoading} color={appColors.screenBg}
 								backgroundColor={appColors.primary} /> : <TouchableOpacity onPress={() => updateQuantity(productsDetails?.productMaster?.productID, quantity)}
 									style={[external.fd_row, external.ai_center, external.pt_4, { backgroundColor: appColors.primary, borderRadius: 30 }, external.ph_20]}>
-								<Cart />
+								<AddShoppingCartG color={appColors.textColorWhite}/>
 								<Text style={[styles.buyNowText, { paddingRight: 10 }]}>{t('transData.ADD_TO_CART')}</Text>
 							</TouchableOpacity>}
 						</View>
@@ -970,7 +1020,9 @@ const ProductDetail = ({ route }) => {
 											} else {
 												setTxtErrorPlacelistname('');
 											}
-										}} />
+										}}
+
+										errorMessage={txtErrorPlacelistname !== '' && true} />
 									{txtErrorPlacelistname !== '' && (
 										<Text style={[styles.errorStyle, external.mb_10]}>{txtErrorPlacelistname}</Text>
 									)}</View>}
@@ -1020,6 +1072,7 @@ const ProductDetail = ({ route }) => {
 		<View
 			style={[commonStyles.commonContainer, { backgroundColor: bgFullStyle }]}>
 			<ScrollView
+				ref={scrollRef}
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={[external.Pb_80]}
 				style={[commonStyles.commonContainer, { backgroundColor: bgFullStyle }]}>
@@ -1027,46 +1080,48 @@ const ProductDetail = ({ route }) => {
 				<ProductHeaderContainer type="search" onPress={() => navigation.goBack()} />
 
 				<View style={[styles.brandSection, external.mh_20]}>
-					<View style={[external.fd_row, external.ai_center]}>
-						<View style={[external.fx_1, external.fd_row, external.ai_center]}>
-							<View style={styles.brandLogoContent}>
-								{productsDetails?.productMaster?.brandLogoPath?.endsWith('.svg') ? <FixedSvgFromUrl
-									width={windowWidth(100)}
-									height={windowWidth(50)}
-									uri={`${IMAGE_CONFIG.BASE_URL}/${productsDetails?.productMaster?.brandLogoPath}`}
-								/> : <Image
-									source={
-										productsDetails?.productMaster?.brandLogoPath && productsDetails?.productMaster?.brandLogoPath !== 'noimage.jpg'
-											? { uri: `${IMAGE_CONFIG.BASE_URL}/${productsDetails?.productMaster?.brandLogoPath}` }
-											: require('../../../assets/images/homeScreenOne/placeholder.jpeg')
-									}
+					<TouchableOpacity onPress={() => productsDetails?.productMaster?.brandCode && navigation.navigate("ProductListing", {
+						item: {
+							title: productsDetails?.productMaster?.brandCode,
+							url: "",
+							parentCat: productsDetails?.productMaster?.brandCode,
+							filterKey: "",
+							categoryName: productsDetails?.productMaster?.brandName,
+							filterTitle: ''
 
-									style={[styles.brandLogo, { resizeMode: "contain" }]}
-								/>}
+						}
+					})}>
+						<View style={[external.fd_row, external.ai_center]}>
+							<View style={[external.fx_1, external.fd_row, external.ai_center]}>
+								<View style={styles.brandLogoContent}>
+									{productsDetails?.productMaster?.brandLogoPath?.endsWith('.svg') ? <FixedSvgFromUrl
+										width={windowWidth(100)}
+										height={windowWidth(50)}
+										uri={`${IMAGE_CONFIG.BASE_URL}/${productsDetails?.productMaster?.brandLogoPath}`}
+									/> : <Image
+										source={
+											productsDetails?.productMaster?.brandLogoPath && productsDetails?.productMaster?.brandLogoPath !== 'noimage.jpg'
+												? { uri: `${IMAGE_CONFIG.BASE_URL}/${productsDetails?.productMaster?.brandLogoPath}` }
+												: require('../../../assets/images/homeScreenOne/placeholder.jpeg')
+										}
+
+										style={[styles.brandLogo, { resizeMode: "contain" }]}
+									/>}
+								</View>
+								<Text style={styles.visitStoreText}>{`${t("transData.VISIT")} ${productsDetails?.productMaster?.brandName} ${t("transData.STORE")}`}</Text>
 							</View>
-							<Text style={styles.visitStoreText}>{`${t("transData.VISIT")} ${productsDetails?.productMaster?.brandName} ${t("transData.STORE")}`}</Text>
-						</View>
-						<TouchableOpacity onPress={() => productsDetails?.productMaster?.brandCode && navigation.navigate("ProductListing", {
-							item: {
-								title: productsDetails?.productMaster?.brandCode,
-								url: "",
-								parentCat: productsDetails?.productMaster?.brandCode,
-								filterKey: "",
-								categoryName: productsDetails?.productMaster?.brandName,
-								filterTitle: ''
+							<KeyboardDoubleArrowRight color={appColors.primary} />
 
-							}
-						})}>
-							<KeyboardDoubleArrowRight color={appColors.primary} height={20} width={20} />
-						</TouchableOpacity>
-					</View>
+						</View>
+					</TouchableOpacity>
+
 				</View>
 
 				<View style={[external.mh_20, external.mt_10]}>
 					<Text
 						style={[
 							commonStyles.titleText19,
-							{ color: textColorStyle, fontSize: fontSizes.FONT18 },
+							{ color: textColorStyle },
 							{ textAlign: textRTLStyle },
 						]}>
 						{productsDetails?.productMaster?.productTitle}
@@ -1075,7 +1130,7 @@ const ProductDetail = ({ route }) => {
 						style={[
 							commonStyles.subtitleText,
 							external.mt_5,
-							{ color: textColorStyle, fontSize: fontSizes.FONT14 },
+							{ color: textColorStyle, fontSize: fontSizes.FONT12 },
 							{ textAlign: textRTLStyle },
 						]}>
 						{`Shop all: `}
@@ -1083,7 +1138,7 @@ const ProductDetail = ({ route }) => {
 							style={[
 								commonStyles.subtitleText,
 								external.mt_5,
-								{ color: appColors.primary, fontSize: fontSizes.FONT14, },
+								{ color: appColors.primary, fontSize: fontSizes.FONT12, },
 								{ textAlign: textRTLStyle },
 							]}>
 							{`${productsDetails?.productMaster?.brandName}`}
@@ -1091,7 +1146,7 @@ const ProductDetail = ({ route }) => {
 								style={[
 									commonStyles.subtitleText,
 									external.mt_5,
-									{ color: textColorStyle, fontSize: fontSizes.FONT14 },
+									{ color: textColorStyle, fontSize: fontSizes.FONT12 },
 									{ textAlign: textRTLStyle },
 								]}>
 								{`  |  SKU: ${productsDetails?.productMaster?.sku}  |  Model: ${productsDetails?.productMaster?.modelNo}`}
@@ -1104,25 +1159,54 @@ const ProductDetail = ({ route }) => {
 
 				<View style={[external.mv_10, { backgroundColor: appColors.bgLayout }]}>
 					<View style={{ position: 'relative' }}>
-						<TouchableOpacity onPress={() => openImageviewAlert()}>
-							{(productImages && productImages.length > 0) &&
-								productImages[selectedImage]?.imagePath &&
-								productImages[selectedImage]?.imagePath !== 'noimage.jpg' &&
-								productImages[selectedImage]?.imagePath?.endsWith('.svg') ? <FixedSvgFromUrl
-								height={SCREEN_WIDTH * 0.7}
-								width={SCREEN_WIDTH}
-								resizeMode={'contain'}
-								uri={`${IMAGE_CONFIG.BASE_URL}/${productImages[selectedImage]?.imagePath}`}
-							/> : <Image
-								style={styles.mainImage}
-								resizeMode="contain"
-								source={
-									productImages[selectedImage]?.imagePath
-										? { uri: `${IMAGE_CONFIG.BASE_URL}/${productImages[selectedImage]?.imagePath}` }
-										: require('../../../assets/images/homeScreenOne/placeholder.jpeg')
-								}
-							/>}
-						</TouchableOpacity>
+
+						<Carousel
+							ref={carouselRef}
+							data={productImages || []}
+							renderItem={({ item, index }) => {
+								const imagePath = item?.imagePath;
+
+								const isSvg =
+									imagePath &&
+									imagePath !== 'noimage.jpg' &&
+									imagePath.endsWith('.svg');
+
+								return (
+									<TouchableOpacity onPress={() => openImageviewAlert(index)}>
+										{isSvg ? (
+											<FixedSvgFromUrl
+												height={SCREEN_WIDTH}
+												width={SCREEN_WIDTH}
+												resizeMode="contain"
+												uri={`${IMAGE_CONFIG.BASE_URL}/${imagePath}`}
+											/>
+										) : (
+											<Image
+												style={[styles.mainImage]}
+												resizeMode='contain'
+												source={
+													imagePath
+														? { uri: `${IMAGE_CONFIG.BASE_URL}/${imagePath}` }
+														: require('../../../assets/images/homeScreenOne/placeholder.jpeg')
+												}
+											/>
+										)}
+									</TouchableOpacity>
+								);
+							}}
+							sliderWidth={SCREEN_WIDTH}
+							itemWidth={SCREEN_WIDTH}
+							autoplay={true}
+							autoplayInterval={5000}
+							loop
+							enableMomentum={true}
+
+							lockScrollWhileSnapping
+							onSnapToItem={(index) => {
+								selectedImageHandle(index);
+							}}
+
+						/>
 						<View style={[{
 							position: 'absolute',
 							top: windowHeight(10), right: windowHeight(30)
@@ -1146,14 +1230,12 @@ const ProductDetail = ({ route }) => {
 									{(productsDetails?.productMaster?.purchaseListID === 0 || !productsDetails?.productMaster?.purchaseListID) ? <Favorite /> : <FavoriteFillG />}
 
 								</TouchableOpacity>
-								<TouchableOpacity style={styles.actionIcon}>
-									<DownloadIcon />
-								</TouchableOpacity>
 							</View>
 						</View>
 					</View>
 				</View>
 				{(productImages && productImages.length > 0) && <FlatList
+					ref={imageflatListRef}
 					data={productImages}
 					renderItem={renderImageItem}
 					keyExtractor={(item, index) => index.toString()}
@@ -1167,49 +1249,61 @@ const ProductDetail = ({ route }) => {
 					<Text
 						style={[
 							commonStyles.subtitleText,
-							{ color: textColorStyle, fontSize: fontSizes.FONT14 },
+							{ color: textColorStyle, fontSize: fontSizes.FONT18 },
 						]}
 					>
 						{`${formatCurrency(productsDetails?.productMaster?.mainPrice ?? "0", currency, curreLocale)} (Incl. of all taxes)`}
 					</Text>
-					<View style={[external.fd_row, external.ai_baseline, external.mt_5]}>
+					<View style={[external.fd_row, external.ai_center]}>
 						<Text
 							style={[
 								styles.priceText,
 								{ color: textColorStyle },
-								{ flexDirection: viewRTLStyle },
+
 							]}>
 							{`${formatCurrency(productsDetails?.productMaster?.sellingPrice ?? "0", currency, curreLocale)}`}
-							<Text
-								style={[
-									commonStyles.subtitleText,
-									{ color: textColorStyle, fontSize: fontSizes.FONT14 },
-								]}
-							>
-								{`  + ${formatCurrency(productsDetails?.productMaster?.gstPrice ?? "0", currency, curreLocale)}`}
-								<Text
-									style={[
-										commonStyles.subtitleText,
-										{ color: textColorStyle, fontSize: fontSizes.FONT14 },
-									]}
-								>
-									{`  ${t("transData.GST")} (${productsDetails?.productMaster?.gstRate ?? "0"}%)`}
-								</Text>
-							</Text>
 
+
+						</Text>
+						<Text
+							style={[
+								commonStyles.subtitleText,
+								{
+									color: textColorStyle, fontSize: fontSizes.FONT14,
+									lineHeight: fontSizes.FONT14 * 1.2,
+									includeFontPadding: false,
+									textAlignVertical: "center",
+								},
+							]}
+						>
+							{`  + ${formatCurrency(productsDetails?.productMaster?.gstPrice ?? "0", currency, curreLocale)}`}
+
+						</Text>
+						<Text
+							style={[
+								commonStyles.subtitleText,
+								{
+									color: textColorStyle, fontSize: fontSizes.FONT14,
+									lineHeight: fontSizes.FONT14 * 1.2,
+									includeFontPadding: false,
+									textAlignVertical: "center",
+
+								},
+							]}
+						>
+							{`  ${t("transData.GST")} (${productsDetails?.productMaster?.gstRate ?? "0"}%)`}
 						</Text>
 					</View>
 					<View
 						style={[
 							external.fd_row,
 							external.ai_center,
-							external.mt_5,
 							{ flexDirection: viewRTLStyle },
 						]}>
 						<Text
 							style={[
 								commonStyles.subtitleText,
-								{ color: textColorStyle, fontSize: fontSizes.FONT14 },
+								{ color: textColorStyle },
 							]}
 						>
 							{`MRP: `}
@@ -1233,7 +1327,7 @@ const ProductDetail = ({ route }) => {
 						<Text
 							style={[
 								commonStyles.subtitleText,
-								{ color: textColorStyle, fontSize: fontSizes.FONT14, fontFamily: appFonts.semiBold },
+								{ color: textColorStyle, fontSize: fontSizes.FONT17, fontFamily: appFonts.semiBold },
 								{ textAlign: textRTLStyle },
 							]}>
 							{`Dispatch: `}
@@ -1241,7 +1335,7 @@ const ProductDetail = ({ route }) => {
 						<Text
 							style={[
 								commonStyles.subtitleText,
-								{ color: textColorStyle, fontSize: fontSizes.FONT14, },
+								{ color: textColorStyle, fontSize: fontSizes.FONT17, },
 								{ textAlign: textRTLStyle },
 							]}>
 							{`${productsDetails?.productMaster?.days} Bussiness Days`}
@@ -1252,7 +1346,7 @@ const ProductDetail = ({ route }) => {
 							style={[
 								commonStyles.subtitleText,
 								external.mt_3,
-								{ color: textColorStyle, fontSize: fontSizes.FONT14, fontFamily: appFonts.semiBold },
+								{ color: textColorStyle, fontSize: fontSizes.FONT17, fontFamily: appFonts.semiBold },
 								{ textAlign: textRTLStyle },
 							]}>
 							{`Items in Pack: `}
@@ -1261,7 +1355,7 @@ const ProductDetail = ({ route }) => {
 							style={[
 								commonStyles.subtitleText,
 								external.mt_3,
-								{ color: textColorStyle, fontSize: fontSizes.FONT14, },
+								{ color: textColorStyle, fontSize: fontSizes.FONT17, },
 								{ textAlign: textRTLStyle },
 							]}>
 							{`${productsDetails?.productMaster?.packUnit}`}
@@ -1272,7 +1366,7 @@ const ProductDetail = ({ route }) => {
 							style={[
 								commonStyles.subtitleText,
 								external.mt_3,
-								{ color: textColorStyle, fontSize: fontSizes.FONT14, fontFamily: appFonts.semiBold },
+								{ color: textColorStyle, fontSize: fontSizes.FONT17, fontFamily: appFonts.semiBold },
 								{ textAlign: textRTLStyle },
 							]}>
 							{`HSN Code: `}
@@ -1280,7 +1374,7 @@ const ProductDetail = ({ route }) => {
 							style={[
 								commonStyles.subtitleText,
 								external.mt_3,
-								{ color: textColorStyle, fontSize: fontSizes.FONT14 },
+								{ color: textColorStyle, fontSize: fontSizes.FONT17 },
 								{ textAlign: textRTLStyle },
 							]}>
 							{`${productsDetails?.productMaster?.hsnCode}`}
@@ -1289,12 +1383,12 @@ const ProductDetail = ({ route }) => {
 				</View>
 				<SolidLine />
 
-				<View style={[external.mh_20, external.mt_10, external.mb_20]}>
+				<View style={[external.mh_20, external.mt_10, external.mb_10]}>
 					<Text
 						style={[
 							commonStyles.titleText19,
-							{ fontSize: fontSizes.FONT17, color: textColorStyle },
-							{ textAlign: textRTLStyle },
+							{ fontSize: fontSizes.FONT18, color: textColorStyle },
+							{ textAlign: textRTLStyle, fontFamily: appFonts.bold, },
 						]}>
 						{t('transData.KEY_FEATURES')}
 					</Text>
@@ -1308,7 +1402,7 @@ const ProductDetail = ({ route }) => {
 						<Text
 							style={[
 								commonStyles.subtitleText,
-								{ color: textColorStyle, fontSize: fontSizes.FONT13 },
+								{ color: textColorStyle, fontSize: fontSizes.FONT17 },
 								{ width: '35%', textAlign: textRTLStyle, flex: 1 },
 							]}>
 							{"Weight: "}{productsDetails?.productMaster?.weight} {productsDetails?.productMaster?.weightUnit}
@@ -1329,7 +1423,7 @@ const ProductDetail = ({ route }) => {
 								{feature?.attributeType && <Text
 									style={[
 										commonStyles.subtitleText,
-										{ color: textColorStyle, fontSize: fontSizes.FONT13 },
+										{ color: textColorStyle, fontSize: fontSizes.FONT17 },
 										{ width: '35%', textAlign: textRTLStyle, flex: 1 },
 									]}
 								>
@@ -1339,6 +1433,18 @@ const ProductDetail = ({ route }) => {
 							</View>
 						))}
 				</View>
+				<TouchableOpacity onPress={() => {
+					setActiveTab('Specifications');
+					scrollToView();
+				}}>
+					<View style={[external.mh_20, external.mb_10, external.fd_row, external.ai_center]}>
+						<Text style={[{ color: appColors.primary, fontSize: fontSizes.FONT18, fontFamily: appFonts.medium }]}>
+							View all product information
+						</Text>
+						<ChevronForward height={26} width={26} color={appColors.primary} />
+					</View>
+
+				</TouchableOpacity>
 				<SolidLine />
 
 				<View style={[external.mh_20, external.fd_row, external.js_space, external.ai_center]}>
@@ -1351,7 +1457,7 @@ const ProductDetail = ({ route }) => {
 								numberOfLines={2}
 								style={[
 									commonStyles.subtitleText,
-									{ color: textColorStyle, fontSize: fontSizes.FONT14, },
+									{ color: textColorStyle, fontSize: fontSizes.FONT17, },
 									{ textAlign: textRTLStyle },
 									external.fx_1
 
@@ -1367,8 +1473,8 @@ const ProductDetail = ({ route }) => {
 					<Text
 						style={[
 							commonStyles.titleText19,
-							{ fontSize: fontSizes.FONT17, color: textColorStyle },
-							{ textAlign: textRTLStyle },
+							{ fontSize: fontSizes.FONT18, color: textColorStyle },
+							{ textAlign: textRTLStyle, fontFamily: appFonts.bold },
 							external.mb_10
 						]}>
 						{"ToolBuy Benefits"}
@@ -1380,7 +1486,7 @@ const ProductDetail = ({ route }) => {
 						{toolbuyBenefits.map((item, index) => (
 							<View key={item?.title} style={[{
 								width: '50%', // 🔥 2 columns 
-							}, external.pv_10, external.ph_10, external.fd_row, external.ai_center]}>
+							}, external.pv_10, external.pr_10, external.fd_row, external.ai_center]}>
 								{item.icon && <TouchableOpacity onPress={() => {
 									if (item.title == "GST Invoice") {
 										openGstAlert();
@@ -1410,7 +1516,7 @@ const ProductDetail = ({ route }) => {
 									style={[
 										commonStyles.subtitleText,
 										external.ml_10,
-										{ color: appColors.primary, fontSize: fontSizes.FONT15 },
+										{ color: appColors.primary, fontSize: fontSizes.FONT18 },
 									]}
 								>{item.title}</Text></TouchableOpacity>
 							</View>
@@ -1420,7 +1526,7 @@ const ProductDetail = ({ route }) => {
 				</View>
 
 
-				<View style={[external.mh_20, external.mb_10]}>
+				<View ref={targetRef} style={[external.mh_20, external.mb_10]}>
 					<View style={[external.fd_row, { flexDirection: viewRTLStyle }]}>
 						<TouchableOpacity
 							style={[
@@ -1477,7 +1583,7 @@ const ProductDetail = ({ route }) => {
 									{item?.attributeType && <Text
 										style={[
 											commonStyles.subtitleText,
-											{ color: textColorStyle, fontSize: fontSizes.FONT15 },
+											{ color: textColorStyle, fontSize: fontSizes.FONT14, fontFamily: appFonts.bold },
 											{ width: '35%', textAlign: textRTLStyle, flex: 1 },
 										]}>
 										{`${item?.attributeType}:`}
@@ -1485,7 +1591,7 @@ const ProductDetail = ({ route }) => {
 									{item?.attributeValue && <Text
 										style={[
 											commonStyles.subtitleText,
-											{ color: textColorStyle, fontSize: fontSizes.FONT15 },
+											{ color: textColorStyle, fontSize: fontSizes.FONT14 },
 											{ flex: 1, textAlign: textRTLStyle },
 										]}>
 										{item?.attributeValue}
@@ -1537,7 +1643,7 @@ const ProductDetail = ({ route }) => {
 						(isCartLoading ? <NavigationButton isLoading={isCartLoading} color={appColors.screenBg}
 							backgroundColor={appColors.primary} /> : <TouchableOpacity onPress={() => updateQuantity(productsDetails?.productMaster?.productID, quantity)}
 								style={[external.fd_row, external.ai_center, external.pt_4]}>
-							<Cart />
+							<AddShoppingCartG color={appColors.textColorWhite} />
 							<Text style={styles.buyNowText}>{t('transData.ADD_TO_CART')}</Text>
 						</TouchableOpacity>)
 					}

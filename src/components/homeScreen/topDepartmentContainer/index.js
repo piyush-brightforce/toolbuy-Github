@@ -59,7 +59,7 @@ const TopDepartmentContainer = () => {
           <View style={styles.iconLayer}></View>
         </View>
         <Text numberOfLines={2}
-          ellipsizeMode="tail" style={[styles.title, { color: textColorStyle, alignSelf: "center",textAlign:'center'}, [external.Pb_5, external.pt_5]]}>
+          ellipsizeMode="tail" style={[styles.title, { color: textColorStyle, alignSelf: "center",textAlign:'center'}, [external.Pb_5]]}>
           {item.title}
         </Text>
       </TouchableOpacity>
@@ -73,8 +73,8 @@ const TopDepartmentContainer = () => {
         <H3HeadingCategory
           value={t('transData.topDepartments')}
           seeall={t('transData.seeAll')}
-          onpressViewall={()=> navigation.navigate('AllCategoryScreen',{
-						isFrom: "Home",
+          onpressViewall={()=> navigation.navigate('CategoryScreen',{
+						isfrom: "Home",
 					})}
         />
 

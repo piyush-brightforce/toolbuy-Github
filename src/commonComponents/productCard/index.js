@@ -67,7 +67,7 @@ const ProductCard = ({
 					<View style={styles.titleContainer}>
 						<Text
 							style={[styles.productTitle, { color: textColorStyle }]}
-							numberOfLines={2}
+							numberOfLines={3}
 						>
 							{item?.productTitle}
 						</Text>

@@ -8,9 +8,9 @@ const styles = StyleSheet.create({
 	container: {
 		...external.fd_row,
 		...external.ai_center,
-		marginVertical: windowHeight(10),
 		borderRadius: windowHeight(40),
 		marginHorizontal: windowHeight(16),
+		...external.mt_10,
 		padding: 1,
 		overflow: 'hidden',
 	},

@@ -26,6 +26,7 @@ import { PdfIconG } from '../../../../assets/googleIcons/PdfIcon';
 import RNFS from 'react-native-fs';
 import { InvoiceResponse } from '../../../../models/InvoiceModel/invoicelistmodel';
 import { getValue, PREFERENCE_KEY } from '../../../../utils/helper/localStorage';
+import AddressHeaderContainer from '../../../profileScreen/addressheaderContainer/addressheaderContainer';
 
 const OrderHistoryDetailsScreen = ({ route }) => {
 
@@ -365,9 +366,8 @@ const OrderHistoryDetailsScreen = ({ route }) => {
   return (
     <View
       style={[commonStyles.commonContainer, { backgroundColor: appColors.bgLayout }]}>
-      
-      <ProductHeaderContainer title={"Order Details"} type={'title'} righticon={false} onPress={() => navigation.goBack()} />
-
+       
+      <AddressHeaderContainer title='Order Details' type='title' righticon={true} onPress={() => navigation.goBack()} />
 
       <View
         style={[

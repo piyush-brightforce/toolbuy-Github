@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useValues } from '../../../../App';
 import appColors from '../../../themes/appColors';
 import { deleteValue, getValue, PREFERENCE_KEY } from '../../../utils/helper/localStorage';
-import LoginResponseModel from '../../../models/login/loginresponsemodel'; 
+import LoginResponseModel from '../../../models/login/loginresponsemodel';
 import SignIn from '../../auth/login';
 import ProductHeaderContainer from '../../productScreen/productHeaderContainer';
 import appFonts from '../../../themes/appFonts';
@@ -33,10 +33,11 @@ import { Cross } from '../../../utils/icon';
 import SolidLine from '../../../commonComponents/solidLine';
 import PurchaseListContainer from '../purchaselistcontainer';
 import { PurchaseListResponse } from '../../../models/purchaselist/purchaselistmodel';
+import api_service from '../../../utils/api_service/api_service';
 
 const OrderDashBoardScreen = ({ route }) => {
 
-  const { selectedTab } = route?.params || {};
+  const { selectedTab, isFrom } = route?.params || {};
 
   const navigation = useNavigation();
 
@@ -102,15 +103,43 @@ const OrderDashBoardScreen = ({ route }) => {
 
   useEffect(() => {
     setIsLoaderLoading(true);
-    const initialize = async () => { 
+    const initialize = async () => {
       getUserResponse();
-      fetchOrderHistoryListData();
-      fetchAddressList();
-      fetchPurchaseListingData();
-    };
-
+      await fetchOrderHistoryListData();
+      await fetchAddressList(); 
+       setIsLoaderLoading(false);
+    }; 
     initialize();
   }, []);
+
+  useEffect(() => {
+    const initialize = async () => {
+      if (
+        txtPincode.length === 6
+      ) {
+        await fetchCityandStateList(txtPincode);
+      }
+    };
+    initialize();
+
+  }, [txtPincode]);
+
+  const fetchCityandStateList = async (pincode, del = false) => {
+    try {
+      const response = await api_service.fetchCityandStateList(pincode);
+
+      console.log("calling response screen3:", response?.state);
+      console.log("calling response screen4:", response?.district);
+      if (response?.district && response?.state) {
+        const index = indianStatesData.indexOf(response?.state);
+        setTxtCity(prev => prev !== response?.district ? response?.district : prev);
+        setdropdownStateValue(index);
+      }
+    } catch (error) {
+      return {}
+    }
+  };
+
 
   const validatePhoneNumber = () => {
     if (txtPhoneNumber.length !== 10) {
@@ -220,6 +249,7 @@ const OrderDashBoardScreen = ({ route }) => {
 
       if (response.data.Success) {
         await fetchAddressList();
+        setIsLoaderLoading(false);
         Toast.show({
           type: 'success',
           text1: 'Success',
@@ -314,6 +344,7 @@ const OrderDashBoardScreen = ({ route }) => {
       if (response.data.Success) {
         await fetchAddressList();
         setEditItemValue({});
+        setIsLoaderLoading(false);
 
       } else {
         setIsLoaderLoading(false);
@@ -399,6 +430,7 @@ const OrderDashBoardScreen = ({ route }) => {
       });
       if (response.data.Success) {
         await fetchAddressList();
+        setIsLoaderLoading(false);
       } else {
         setIsLoaderLoading(false);
       }
@@ -431,8 +463,7 @@ const OrderDashBoardScreen = ({ route }) => {
 
     } catch (error) {
       console.error("Error fetching data:", error);
-    } finally {
-    }
+    }  
   };
 
 
@@ -487,6 +518,7 @@ const OrderDashBoardScreen = ({ route }) => {
       const data = response.data;
       if (data.Success) {
         await fetchPurchaseListingData();
+
       } else {
         setIsLoaderLoading(false);
       }
@@ -503,610 +535,634 @@ const OrderDashBoardScreen = ({ route }) => {
       if (jsonValue != null) {
         const parsedData = JSON.parse(jsonValue);
         const setresponse = new LoginResponseModel(parsedData);
-
-        setIsLoaderLoading(false);
+ 
         setUserResponse(setresponse);
 
-      }
-      setIsLoaderLoading(false);
-    } catch (e) {
-      setIsLoaderLoading(false);
+      } 
+    } catch (e) { 
       console.error("Fetch error:", e);
-    } finally {
-      setIsLoaderLoading(false);
-    }
+    } 
   };
 
 
   if (!isLoaderLoading && userResponse)
     return (
-      <View style={[external.fx_1, { backgroundColor: appColors.bgLayout }]}>
-        <ProductHeaderContainer title={activeTab} type={'title'} righticon={false} onPress={() => navigation.goBack()} />
+     
+        <View style={[external.fx_1, { backgroundColor: appColors.bgLayout }]}>
+            {!isFrom ? <ProductHeaderContainer title={t('transData.myAccount')} type={'title'} righticon={false} /> : <ProductHeaderContainer title={t('transData.myAccount')} type={'title'} righticon={false} onPress={() => navigation.goBack()} />}
 
-        <View style={[external.mv_15, { backgroundColor: bgFullStyle }]}>
-          <View style={[external.as_center, external.pv_10]}>
-            <Text style={[styles.nameText, { color: textColorStyle, fontFamily: appFonts.bold }]}>
-              <Text style={[styles.nameText, { color: textColorStyle, fontFamily: appFonts.regular }]}>
-                Welcome Back,
+          <View style={[external.mv_15, { backgroundColor: bgFullStyle }]}>
+            <View style={[external.as_center, external.pv_10]}>
+              <Text style={[styles.nameText, { color: textColorStyle, fontFamily: appFonts.bold }]}>
+                <Text style={[styles.nameText, { color: textColorStyle, fontFamily: appFonts.regular }]}>
+                  Welcome Back,
+                </Text>
+                {` ${userResponse.FullName}`}
               </Text>
-              {` ${userResponse.FullName}`}
-            </Text>
-            <Text style={[commonStyles.subtitleText, external.ti_center, { color: textColorStyle, fontSize: fontSizes.FONT12 }]}>
-              Thanks for a being Toolbuy customer
-            </Text>
+              <Text style={[commonStyles.subtitleText, external.ti_center, { color: textColorStyle, fontSize: fontSizes.FONT14 }]}>
+                Thanks for a being Toolbuy customer
+              </Text>
+            </View>
+            <View style={[external.fd_row, { backgroundColor: bgFullStyle }, external.ph_10]}>
+
+
+              {orderDashBoardData.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.title;
+
+                return (
+                  <TouchableOpacity
+                    key={item?.id.toString()}
+                    style={[
+                      styles.tab, {
+                        borderBottomWidth: activeTab === item.title ? 3 : 0, borderBottomColor: appColors.primary,
+                      }, external.fx_1
+                    ]}
+                    onPress={async () => {
+                      setActiveTab(item.title);
+                      if (item.title === "Dashboard") {
+                        setIsLoaderLoading(true);
+                        await fetchOrderHistoryListData();
+                        await fetchAddressList();
+                         setIsLoaderLoading(false);
+                      } else if (item.title === "Order History") {
+                         setIsLoaderLoading(true);
+                        await fetchOrderHistoryListData(); 
+                         setIsLoaderLoading(false);
+                      } else if (item.title === "Addressess") {
+                        setIsLoaderLoading(true);
+                        await fetchAddressList();
+                        setIsLoaderLoading(false);
+                      } else if (item.title === "Purchase List") {
+                        setIsLoaderLoading(true);
+                        await fetchPurchaseListingData();
+                      } else if (item.title === "Profile") {
+                        setIsLoaderLoading(true);
+                        await getUserResponse();
+                         setIsLoaderLoading(false);
+                      }
+                    }}>
+                    <View style={[external.ai_center, external.fd_coloumn]}>
+                      <Icon color={isActive ? appColors.primary : textColorStyle} width={20} height={20} />
+                      <Text
+                        style={[
+                          styles.tabText,
+                          activeTab === item.title && styles.tabTextActive,
+                          { paddingLeft: 5 },
+                        ]}>
+                        {item.title}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
-          <View style={[external.fd_row, { backgroundColor: bgFullStyle }, external.ph_10]}>
 
 
-            {orderDashBoardData.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.title;
+          {activeTab === "Dashboard" && <ScrollView>
+            <View style={[styles.viewContainer, external.fx_1]}>
+              <DashboardContainer orderHistoryData={orderhistoryData} userData={userResponse} addressData={addressListResponse} onTapViewAllOrder={(val) => {
 
-              return (
-                <TouchableOpacity
-                  key={item?.id.toString()}
+                setActiveTab('Order History');
+              }} oncallDefaultAddress={(val) => {
+
+                setActiveTab('Addressess');
+              }} />
+            </View>
+          </ScrollView>}
+
+          {activeTab === "Order History" && <ScrollView  >
+            <View style={[styles.viewContainer, external.fx_1]}>
+              <OrderHistoryContainer orderHistoryData={orderhistoryData} />
+            </View>
+          </ScrollView>}
+
+          {activeTab === "Addressess" && <ScrollView  >
+            <View style={[styles.viewContainer, external.fx_1]}>
+              <DashboardAddressListContainer addressesData={addressListResponse} oncallReturnAddressTag={(val) => {
+
+                if (val.tag === "Edit") {
+                  handleEditOldAddress(val?.item);
+                } else {
+                  removeSelectedAddressApiCall(val?.item?.item?.addressID);
+                }
+              }}
+                oncallReturnDefaultAddressTag={(val) => {
+                  chooseAddressApiCall(val?.item?.item?.addressID, val?.tag);
+                }} />
+            </View>
+          </ScrollView>}
+
+          {activeTab === "Purchase List" && <ScrollView  >
+            <View style={[styles.viewContainer, external.fx_1]}>
+              <PurchaseListContainer purchaseList={purchaseList?.purchaseList} purchaseListProduct={purchaseList?.purchaseListProduct} oncallReturnDeletTag={(val) => {
+
+                deletePurchaseListingData(val?.productId, val?.productListId);
+              }} />
+            </View>
+          </ScrollView>}
+
+          {activeTab === "Profile" && <ScrollView  >
+            <View style={[styles.viewContainer, external.fx_1]}>
+              <DashboardProfileContainer userData={userResponse} />
+            </View>
+          </ScrollView>}
+
+
+          {editModal && <CommonModal
+            isVisible={editModal}
+
+            value={
+              <View
+                style={[{ backgroundColor: bgFullStyle }]}>
+                <View
                   style={[
-                    styles.tab, {
-                      borderBottomWidth: activeTab === item.title ? 3 : 0, borderBottomColor: appColors.primary,
-                    }, external.fx_1
-                  ]}
-                  onPress={async () => {
-                    setActiveTab(item.title);
-                    if (item.title === "Dashboard") {
-
-                      await fetchOrderHistoryListData();
-
-                    } else if (item.title === "Order History") {
-
-                      await fetchOrderHistoryListData();
-
-                    } else if (item.title === "Addressess") {
-
-                      await fetchAddressList();
-
-                    } else if (item.title === "Purchase List") {
-
-                      await fetchPurchaseListingData();
-                    } else if (item.title === "Profile") {
-                      await getUserResponse();
-                    }
-                  }}>
-                  <View style={[external.ai_center, external.fd_coloumn]}>
-                    <Icon color={isActive ? appColors.primary : textColorStyle} width={18} height={18} />
+                    external.fd_row,
+                    external.ai_center,
+                    external.js_space,
+                  ]}>
+                  <View style={external.fx_1}>
                     <Text
-                      style={[
-                        styles.tabText,
-                        activeTab === item.title && styles.tabTextActive,
-                        { paddingLeft: 5 },
-                      ]}>
-                      {item.title}
+                      style={[commonStyles.titleText19, { color: textColorStyle, textAlign: 'center' }]}>
+                      {editAddress}
                     </Text>
                   </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+                  <TouchableOpacity onPress={() => setEditModal(false)}>
+                    <Cross />
+                  </TouchableOpacity>
+                </View>
+                <SolidLine />
+                <View style={{ height: SCREEN_HEIGHT * 0.7 }}>
+                  <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    scrollEnabled={true}
+                    alwaysBounceVertical={true}
+                  >
+
+                    <TextInputs
+                      value={txtfullname}
+                      title={"Fullname"}
+                      placeHolder={"Fullname"}
+                      onChangeText={text => {
+                        setTxtfullname(text);
+                        if (text.trim() === '') {
+                          setTxtfullnameError('Fullname is required');
+                        } else {
+                          setTxtfullnameError('');
+                        }
+                      }}
+                      isrequired={true}
+
+                      errorMessage={txtfullnameError !== '' && true}
+                      onSubmitEditing={() => Keyboard.dismiss()}
+                    />
+                    {txtfullnameError !== '' && <Text style={styles.errorStyle}>{txtfullnameError}</Text>}
+                    <TextInputs
+                      value={txtPhoneNumber}
+                      title={"10 Digit Mobile Number"}
+                      placeHolder={"10 Digit Mobile Number"}
+                      keyboardType={"number-pad"}
+                      maxLength={10}
+                      isrequired={true}
+                      onChangeText={text => {
+                        setTxtPhoneNumber(text);
+                        if (text.trim() === '') {
+                          setTxtPhoneNumberError('Phonenumber is required');
+                        } else {
+                          setTxtPhoneNumberError('');
+                        }
+                      }}
+                      onBlur={() => {
+                        validatePhoneNumber();
+                      }}
+
+                      errorMessage={txtPhoneNumberError !== '' && true}
+                      onSubmitEditing={() => validatePhoneNumber()}
+                    />
+                    {txtPhoneNumberError !== '' && <Text style={styles.errorStyle}>{txtPhoneNumberError}</Text>}
+                    {userResponse?.BusinessName && <TextInputs
+                      title={"Bussiness Name"}
+                      placeHolder={"Bussiness Name"}
+                      value={userResponse?.BusinessName}
+                      isEditable={false}
+                    />}
+
+                    <TextInputs
+                      value={txtAddressLine1}
+                      title={"Address Line 1"}
+                      placeHolder={"Address Line 1"}
+                      onChangeText={text => {
+                        setTxtAddressLine1(text);
+                        if (text.trim() === '') {
+                          setTxtAddressLine1Error('Addressline1 is required');
+                        } else {
+                          setTxtAddressLine1Error('');
+                        }
+                      }}
+                      isrequired={true}
+                      errorMessage={txtAddressLine1Error !== '' && true}
+                    />
+                    {txtAddressLine1Error !== '' && <Text style={styles.errorStyle}>{txtAddressLine1Error}</Text>}
+
+
+                    <TextInputs
+                      value={txtAddressLine2}
+                      title={"Address Line 2 (Optional)"}
+                      placeHolder={"Address Line 2 (Optional)"}
+                      onChangeText={text => {
+                        setTxtAddressLine2(text);
+                      }}
+                    />
+                    <TextInputs
+                      value={txtLandmark}
+                      title={"Landmark (Optional)"}
+                      placeHolder={"Landmark (Optional)"}
+                      onChangeText={text => {
+                        setTxtLandmark(text);
+                      }}
+                    />
+                    <TextInputs
+                      value={txtPincode?.toString() || ''}
+                      title={"Pincode"}
+                      placeHolder={"Pincode"}
+                      onChangeText={text => {
+                        setTxtPincode(text);
+                        if (text.trim() === '') {
+                          setTxtPincodeError('Pincode is required');
+                        } else {
+                          setTxtPincodeError('');
+                        }
+                      }}
+                      isrequired={true}
+                      keyboardType={'number-pad'}
+                      onBlur={() => {
+                        validatePincondeNumber();
+                      }}
+                      errorMessage={txtPincodeError !== '' && true}
+                      onSubmitEditing={() => validatePincondeNumber()}
+                    />
+                    {txtPincodeError !== '' && <Text style={styles.errorStyle}>{txtPincodeError}</Text>}
+
+
+                    <View style={[
+                      external.fd_row,
+                      external.ai_center,
+                      external.js_center,]}>
+                      <View style={{ width: '47%', marginHorizontal: 10 }}>
+                        <TextInputs
+                          value={txtCity}
+                          title={"CityTown"}
+                          placeHolder={"CityTown"}
+                          onChangeText={text => {
+                            setTxtCity(text);
+                            if (text.trim() === '') {
+                              setTxtCityError('City is required');
+                            } else {
+                              setTxtCityError('');
+                            }
+                          }}
+                          isrequired={true}
+                          errorMessage={txtCityError !== '' && true}
+                          onSubmitEditing={() => Keyboard.dismiss()}
+                        />
+                      </View>
+                      <View style={{ width: '47%', marginHorizontal: 10 }}>
+                        <DropdownSectionState
+                          title={
+                            dropdownStateValue !== null && dropdownStateValue !== undefined
+                              ? indianStatesData[dropdownStateValue]
+                              : "Select State"
+                          } options={indianStatesData}
+                          selected={dropdownStateValue}
+                          onSelect={setdropdownStateValue} />
+                      </View>
+                    </View>
+
+                    {txtCityError !== '' && <Text style={styles.errorStyle}>{txtCityError}</Text>}
+                    <View style={[
+                      external.fd_row,
+                      external.ai_center,
+                      external.js_center,]}>
+                      <View style={{ width: '47%', marginHorizontal: 10 }}>
+
+                        <TextInputs
+                          value={txtCompanyName}
+                          title={"Company or Business Name"}
+                          placeHolder={"Company or Business Name"}
+                          onChangeText={text => {
+                            setTxtCompanyName(text);
+                            if (text.trim() === '') {
+                              setTxtCompanyNameError('Business Name is required');
+                            } else {
+                              setTxtCompanyNameError('');
+                            }
+                          }}
+                          isrequired={true}
+                          errorMessage={txtCompanyNameError !== '' && true}
+                        />
+
+                      </View>
+                      <View style={{ width: '47%', marginHorizontal: 10 }}>
+
+                        <TextInputs
+                          value={txtGstNumber}
+                          title={"GST Number (Optional)"}
+                          placeHolder={"GST Number (Optional)"}
+                          onChangeText={text => {
+                            setTxtGstNumber(text);
+                          }}
+                        />
+                      </View>
+                    </View>
+
+                    {txtCompanyNameError !== '' && <Text style={styles.errorStyle}>{txtCompanyNameError}</Text>}
+
+
+                  </ScrollView>
+                </View>
+                <View
+                  style={[
+                    external.fd_row,
+                    external.ai_center,
+                    external.js_center,
+                    external.mt_10,
+                  ]}>
+
+                  <View style={{ width: SCREEN_WIDTH - windowHeight(40) }}>
+                    <NavigationButton
+                      backgroundColor={appColors.primary}
+                      title={'Edit Address'}
+                      color={appColors.screenBg}
+                      onPress={() => checkAllValidationForUpdate(editItemValue)}
+                    />
+                  </View>
+                </View>
+
+
+              </View>
+            }
+          />}
+
+
+          <CommonModal
+            isVisible={addAddressModal}
+            value={
+              <View
+                style={[{ backgroundColor: bgFullStyle }]}>
+                <View
+                  style={[
+                    external.fd_row,
+                    external.ai_center,
+                    external.js_space,
+                  ]}>
+                  <View style={external.fx_1}>
+                    <Text
+                      style={[commonStyles.titleText19, { color: textColorStyle, textAlign: 'center' }]}>
+                      {addnewAddress}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setaddAddressModal(false)}>
+                    <Cross />
+                  </TouchableOpacity>
+                </View>
+                <View style={{ height: SCREEN_HEIGHT * 0.7 }}>
+                  <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    scrollEnabled={true}
+                  >
+                    <SolidLine />
+                    <TextInputs
+                      value={txtfullname}
+                      title={"Fullname"}
+                      placeHolder={"Fullname"}
+                      onChangeText={text => {
+                        setTxtfullname(text);
+                        if (text.trim() === '') {
+                          setTxtfullnameError('Fullname is required');
+                        } else {
+                          setTxtfullnameError('');
+                        }
+                      }}
+                      isrequired={true}
+                      errorMessage={txtfullnameError !== '' && true}
+                      onSubmitEditing={() => Keyboard.dismiss()}
+                    />
+                    {txtfullnameError !== '' && <Text style={styles.errorStyle}>{txtfullnameError}</Text>}
+                    <TextInputs
+                      value={txtPhoneNumber}
+                      title={"10 Digit Mobile Number"}
+                      placeHolder={"10 Digit Mobile Number"}
+                      keyboardType={"number-pad"}
+                      maxLength={10}
+                      isrequired={true}
+                      onChangeText={text => {
+                        setTxtPhoneNumber(text);
+                        if (text.trim() === '') {
+                          setTxtPhoneNumberError('Phonenumber is required');
+                        } else {
+                          setTxtPhoneNumberError('');
+                        }
+                      }}
+                      onBlur={() => {
+                        validatePhoneNumber();
+                      }}
+
+                      errorMessage={txtPhoneNumberError !== '' && true}
+                      onSubmitEditing={() => validatePhoneNumber()}
+                    />
+                    {txtPhoneNumberError !== '' && <Text style={styles.errorStyle}>{txtPhoneNumberError}</Text>}
+
+                    <TextInputs
+                      value={txtAddressLine1}
+                      title={"Address Line 1"}
+                      placeHolder={"Address Line 1"}
+                      onChangeText={text => {
+                        setTxtAddressLine1(text);
+                        if (text.trim() === '') {
+                          setTxtAddressLine1Error('Addressline1 is required');
+                        } else {
+                          setTxtAddressLine1Error('');
+                        }
+                      }}
+                      isrequired={true}
+                      errorMessage={txtAddressLine1Error !== '' && true}
+                    />
+                    {txtAddressLine1Error !== '' && <Text style={styles.errorStyle}>{txtAddressLine1Error}</Text>}
+
+
+                    <TextInputs
+                      value={txtAddressLine2}
+                      title={"Address Line 2 (Optional)"}
+                      placeHolder={"Address Line 2 (Optional)"}
+                      onChangeText={text => {
+                        setTxtAddressLine2(text);
+                      }}
+                    />
+                    <TextInputs
+                      value={txtLandmark}
+                      title={"Landmark (Optional)"}
+                      placeHolder={"Landmark (Optional)"}
+                      onChangeText={text => {
+                        setTxtLandmark(text);
+                      }}
+                    />
+                    <TextInputs
+                      value={txtPincode?.toString() || ''}
+                      title={"Pincode"}
+                      placeHolder={"Pincode"}
+                      onChangeText={text => {
+                        setTxtPincode(text);
+                        if (text.trim() === '') {
+                          setTxtPincodeError('Pincode is required');
+                        } else {
+                          setTxtPincodeError('');
+                        }
+                      }}
+                      isrequired={true}
+                      keyboardType={'number-pad'}
+                      onBlur={() => {
+                        validatePincondeNumber();
+                      }}
+
+                      errorMessage={txtPincodeError !== '' && true}
+                      onSubmitEditing={() => validatePincondeNumber()}
+                    />
+                    {txtPincodeError !== '' && <Text style={styles.errorStyle}>{txtPincodeError}</Text>}
+
+
+                    <View style={[
+                      external.fd_row,
+                      external.ai_center,
+                      external.js_center,]}>
+                      <View style={{ width: '47%', marginHorizontal: 10 }}>
+                        <TextInputs
+                          value={txtCity}
+                          title={"CityTown"}
+                          placeHolder={"CityTown"}
+                          onChangeText={text => {
+                            setTxtCity(text);
+                            if (text.trim() === '') {
+                              setTxtCityError('City is required');
+                            } else {
+                              setTxtCityError('');
+                            }
+                          }}
+                          isrequired={true}
+                          errorMessage={txtCityError !== '' && true}
+                          onSubmitEditing={() => Keyboard.dismiss()}
+                        />
+                      </View>
+                      <View style={{ width: '47%', marginHorizontal: 10 }}>
+                        <DropdownSectionState
+                          title={
+                            dropdownStateValue !== null && dropdownStateValue !== undefined
+                              ? indianStatesData[dropdownStateValue]
+                              : "Select State"
+                          } options={indianStatesData}
+                          selected={dropdownStateValue}
+                          onSelect={setdropdownStateValue} />
+                      </View>
+                    </View>
+
+                    {txtCityError !== '' && <Text style={styles.errorStyle}>{txtCityError}</Text>}
+
+
+                    {selectedBuyingCompany1 && <View style={[
+                      external.fd_row,
+                      external.ai_center,
+                      external.js_center,]}>
+                      <View style={{ width: '47%', marginHorizontal: 10 }}>
+
+                        <TextInputs
+                          value={txtCompanyName}
+                          title={"Company or Business Name"}
+                          placeHolder={"Company or Business Name"}
+                          onChangeText={text => {
+                            setTxtCompanyName(text);
+                            if (text.trim() === '') {
+                              setTxtCompanyNameError('Business Name is required');
+                            } else {
+                              setTxtCompanyNameError('');
+                            }
+                          }}
+                          isrequired={true}
+                          errorMessage={txtCompanyNameError !== '' && true}
+                        />
+
+                      </View>
+                      <View style={{ width: '47%', marginHorizontal: 10 }}>
+
+                        <TextInputs
+                          value={txtGstNumber}
+                          title={"GST Number (Optional)"}
+                          placeHolder={"GST Number (Optional)"}
+                          onChangeText={text => {
+                            setTxtGstNumber(text);
+                          }}
+                        />
+                      </View>
+                    </View>}
+                    {txtCompanyNameError !== '' && <Text style={styles.errorStyle}>{txtCompanyNameError}</Text>}
+                    <View style={[styles.defaulText, { flexDirection: viewRTLStyle }]}>
+                      <CheckBox
+                        onPress={setSelectedDelAsBil1}
+                        checked={selectedDeliveryAsB1}
+                      />
+                      <Text
+                        style={[
+                          styles.defaulTextView,
+                          { color: textColorStyle },
+                          { textAlign: textRTLStyle },
+                        ]}>
+                        Use my Billing Address as my Delivery Address
+                      </Text>
+                    </View>
+
+                    <View style={[styles.defaulText, { flexDirection: viewRTLStyle }]}>
+                      <CheckBox
+                        onPress={handleSetSelectedBuyingCompany1}
+                        checked={selectedBuyingCompany1}
+                      />
+                      <Text
+                        style={[
+                          styles.defaulTextView,
+                          { color: textColorStyle },
+                          { textAlign: textRTLStyle },
+                        ]}>
+                        I am buying for a company
+                      </Text>
+                    </View>
+
+                  </ScrollView>
+                </View>
+                <View
+                  style={[
+                    external.fd_row,
+                    external.ai_center,
+                    external.js_center,
+                    external.mt_10,
+                  ]}>
+                  <View style={{ width: SCREEN_WIDTH - windowHeight(40) }}>
+                    <NavigationButton
+                      backgroundColor={appColors.primary}
+                      title={'Use This Address'}
+                      color={appColors.screenBg}
+                      onPress={() => handleAddNewAddress()}
+                    />
+                  </View>
+                </View>
+
+              </View>
+            }
+          />
+
+          {activeTab === "Addressess" && <View style={[external.ph_13, external.pv_10]}>
+            <NavigationButton backgroundColor={appColors.primary} title={"Add Address"} color={appColors.textColorWhite} onPress={() => setaddAddressModal(true)} />
+
+          </View>}
         </View>
 
-
-        {activeTab === "Dashboard" && <ScrollView>
-          <View style={[styles.viewContainer, external.fx_1]}>
-            <DashboardContainer orderHistoryData={orderhistoryData} userData={userResponse} addressData={addressListResponse} onTapViewAllOrder={(val) => {
-
-              setActiveTab('Order History');
-            }} oncallDefaultAddress={(val) => {
-
-              setActiveTab('Addressess');
-            }} />
-          </View>
-        </ScrollView>}
-
-        {activeTab === "Order History" && <ScrollView  >
-          <View style={[styles.viewContainer, external.fx_1]}>
-            <OrderHistoryContainer orderHistoryData={orderhistoryData} />
-          </View>
-        </ScrollView>}
-
-        {activeTab === "Addressess" && <ScrollView  >
-          <View style={[styles.viewContainer, external.fx_1]}>
-            <DashboardAddressListContainer addressesData={addressListResponse} oncallReturnAddressTag={(val) => {
-
-              if (val.tag === "Edit") {
-                handleEditOldAddress(val?.item);
-              } else {
-                removeSelectedAddressApiCall(val?.item?.item?.addressID);
-              }
-            }}
-              oncallReturnDefaultAddressTag={(val) => {
-                chooseAddressApiCall(val?.item?.item?.addressID, val?.tag);
-              }} />
-          </View>
-        </ScrollView>}
-
-        {activeTab === "Purchase List" && <ScrollView  >
-          <View style={[styles.viewContainer, external.fx_1]}>
-            <PurchaseListContainer purchaseList={purchaseList?.purchaseList} purchaseListProduct={purchaseList?.purchaseListProduct} oncallReturnDeletTag={(val) => {
-
-              deletePurchaseListingData(val?.productId, val?.productListId);
-            }} />
-          </View>
-        </ScrollView>}
-
-        {activeTab === "Profile" && <ScrollView  >
-          <View style={[styles.viewContainer, external.fx_1]}>
-            <DashboardProfileContainer userData={userResponse} />
-          </View>
-        </ScrollView>}
-
-
-        {editModal && <CommonModal
-          isVisible={editModal}
-
-          value={
-            <View
-              style={[{ backgroundColor: bgFullStyle }]}>
-              <View
-                style={[
-                  external.fd_row,
-                  external.ai_center,
-                  external.js_space,
-                ]}>
-                <View style={external.fx_1}>
-                  <Text
-                    style={[commonStyles.titleText19, { color: textColorStyle, textAlign: 'center' }]}>
-                    {editAddress}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => setEditModal(false)}>
-                  <Cross />
-                </TouchableOpacity>
-              </View>
-              <SolidLine />
-              <View style={{ height: SCREEN_HEIGHT * 0.7 }}>
-                <ScrollView
-                  showsVerticalScrollIndicator={false}
-                  scrollEnabled={true}
-                  alwaysBounceVertical={true}
-                >
-
-                  <TextInputs
-                    value={txtfullname}
-                    title={"Fullname"}
-                    placeHolder={"Fullname"}
-                    onChangeText={text => {
-                      setTxtfullname(text);
-                      if (text.trim() === '') {
-                        setTxtfullnameError('Fullname is required');
-                      } else {
-                        setTxtfullnameError('');
-                      }
-                    }}
-                    onSubmitEditing={() => Keyboard.dismiss()}
-                  />
-                  {txtfullnameError !== '' && <Text style={styles.errorStyle}>{txtfullnameError}</Text>}
-                  <TextInputs
-                    value={txtPhoneNumber}
-                    title={"10 Digit Mobile Number"}
-                    placeHolder={"10 Digit Mobile Number"}
-                    keyboardType={"number-pad"}
-                    maxLength={10}
-
-                    onChangeText={text => {
-                      setTxtPhoneNumber(text);
-                      if (text.trim() === '') {
-                        setTxtPhoneNumberError('Phonenumber is required');
-                      } else {
-                        setTxtPhoneNumberError('');
-                      }
-                    }}
-                    onBlur={() => {
-                      validatePhoneNumber();
-                    }}
-                    onSubmitEditing={() => validatePhoneNumber()}
-                  />
-                  {txtPhoneNumberError !== '' && <Text style={styles.errorStyle}>{txtPhoneNumberError}</Text>}
-                  {userResponse?.BusinessName && <TextInputs
-                    title={"Bussiness Name"}
-                    placeHolder={"Bussiness Name"}
-                    value={userResponse?.BusinessName}
-                    isEditable={false}
-                  />}
-
-                  <TextInputs
-                    value={txtAddressLine1}
-                    title={"Address Line 1"}
-                    placeHolder={"Address Line 1"}
-                    onChangeText={text => {
-                      setTxtAddressLine1(text);
-                      if (text.trim() === '') {
-                        setTxtAddressLine1Error('Addressline1 is required');
-                      } else {
-                        setTxtAddressLine1Error('');
-                      }
-                    }}
-                  />
-                  {txtAddressLine1Error !== '' && <Text style={styles.errorStyle}>{txtAddressLine1Error}</Text>}
-
-
-                  <TextInputs
-                    value={txtAddressLine2}
-                    title={"Address Line 2 (Optional)"}
-                    placeHolder={"Address Line 2 (Optional)"}
-                    onChangeText={text => {
-                      setTxtAddressLine2(text);
-                    }}
-                  />
-                  <TextInputs
-                    value={txtLandmark}
-                    title={"Landmark (Optional)"}
-                    placeHolder={"Landmark (Optional)"}
-                    onChangeText={text => {
-                      setTxtLandmark(text);
-                    }}
-                  />
-                  <TextInputs
-                    value={txtPincode}
-                    title={"Pincode"}
-                    placeHolder={"Pincode"}
-                    onChangeText={text => {
-                      setTxtPincode(text);
-                      if (text.trim() === '') {
-                        setTxtPincodeError('Pincode is required');
-                      } else {
-                        setTxtPincodeError('');
-                      }
-                    }}
-
-                    keyboardType={'number-pad'}
-                    onBlur={() => {
-                      validatePincondeNumber();
-                    }}
-                    onSubmitEditing={() => validatePincondeNumber()}
-                  />
-                  {txtPincodeError !== '' && <Text style={styles.errorStyle}>{txtPincodeError}</Text>}
-
-
-                  <View style={[
-                    external.fd_row,
-                    external.ai_center,
-                    external.js_center,]}>
-                    <View style={{ width: '47%', marginHorizontal: 10 }}>
-                      <TextInputs
-                        value={txtCity}
-                        title={"CityTown"}
-                        placeHolder={"CityTown"}
-                        onChangeText={text => {
-                          setTxtCity(text);
-                          if (text.trim() === '') {
-                            setTxtCityError('City is required');
-                          } else {
-                            setTxtCityError('');
-                          }
-                        }}
-                        onSubmitEditing={() => Keyboard.dismiss()}
-                      />
-                    </View>
-                    <View style={{ width: '47%', marginHorizontal: 10 }}>
-                      <DropdownSectionState
-                        title={
-                          dropdownStateValue !== null && dropdownStateValue !== undefined
-                            ? indianStatesData[dropdownStateValue]
-                            : "Select State"
-                        } options={indianStatesData}
-                        selected={dropdownStateValue}
-                        onSelect={setdropdownStateValue} />
-                    </View>
-                  </View>
-
-                  {txtCityError !== '' && <Text style={styles.errorStyle}>{txtCityError}</Text>}
-                  <View style={[
-                    external.fd_row,
-                    external.ai_center,
-                    external.js_center,]}>
-                    <View style={{ width: '47%', marginHorizontal: 10 }}>
-
-                      <TextInputs
-                        value={txtCompanyName}
-                        title={"Your Company name"}
-                        placeHolder={"Your Company name"}
-                        onChangeText={text => {
-                          setTxtCompanyName(text);
-                          if (text.trim() === '') {
-                            setTxtCompanyNameError('Your Company name is required');
-                          } else {
-                            setTxtCompanyNameError('');
-                          }
-                        }}
-                      />
-
-                    </View>
-                    <View style={{ width: '47%', marginHorizontal: 10 }}>
-
-                      <TextInputs
-                        value={txtGstNumber}
-                        title={"GST Number (Optional)"}
-                        placeHolder={"GST Number (Optional)"}
-                        onChangeText={text => {
-                          setTxtGstNumber(text);
-                        }}
-                      />
-                    </View>
-                  </View>
-
-                  {txtCompanyNameError !== '' && <Text style={styles.errorStyle}>{txtCompanyNameError}</Text>}
-
-
-                </ScrollView>
-              </View>
-              <View
-                style={[
-                  external.fd_row,
-                  external.ai_center,
-                  external.js_center,
-                  external.mt_10,
-                ]}>
-
-                <View style={{ width: SCREEN_WIDTH - windowHeight(40) }}>
-                  <NavigationButton
-                    backgroundColor={appColors.primary}
-                    title={'Edit Address'}
-                    color={appColors.screenBg}
-                    onPress={() => checkAllValidationForUpdate(editItemValue)}
-                  />
-                </View>
-              </View>
-
-
-            </View>
-          }
-        />}
-
-
-        <CommonModal
-          isVisible={addAddressModal}
-          value={
-            <View
-              style={[{ backgroundColor: bgFullStyle }]}>
-              <View
-                style={[
-                  external.fd_row,
-                  external.ai_center,
-                  external.js_space,
-                ]}>
-                <View style={external.fx_1}>
-                  <Text
-                    style={[commonStyles.titleText19, { color: textColorStyle, textAlign: 'center' }]}>
-                    {addnewAddress}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => setaddAddressModal(false)}>
-                  <Cross />
-                </TouchableOpacity>
-              </View>
-              <View style={{ height: SCREEN_HEIGHT * 0.7 }}>
-                <ScrollView
-                  showsVerticalScrollIndicator={false}
-                  scrollEnabled={true}
-                >
-                  <SolidLine />
-                  <TextInputs
-                    value={txtfullname}
-                    title={"Fullname"}
-                    placeHolder={"Fullname"}
-                    onChangeText={text => {
-                      setTxtfullname(text);
-                      if (text.trim() === '') {
-                        setTxtfullnameError('Fullname is required');
-                      } else {
-                        setTxtfullnameError('');
-                      }
-                    }}
-                    onSubmitEditing={() => Keyboard.dismiss()}
-                  />
-                  {txtfullnameError !== '' && <Text style={styles.errorStyle}>{txtfullnameError}</Text>}
-                  <TextInputs
-                    value={txtPhoneNumber}
-                    title={"10 Digit Mobile Number"}
-                    placeHolder={"10 Digit Mobile Number"}
-                    keyboardType={"number-pad"}
-                    maxLength={10}
-
-                    onChangeText={text => {
-                      setTxtPhoneNumber(text);
-                      if (text.trim() === '') {
-                        setTxtPhoneNumberError('Phonenumber is required');
-                      } else {
-                        setTxtPhoneNumberError('');
-                      }
-                    }}
-                    onBlur={() => {
-                      validatePhoneNumber();
-                    }}
-                    onSubmitEditing={() => validatePhoneNumber()}
-                  />
-                  {txtPhoneNumberError !== '' && <Text style={styles.errorStyle}>{txtPhoneNumberError}</Text>}
-
-                  <TextInputs
-                    value={txtAddressLine1}
-                    title={"Address Line 1"}
-                    placeHolder={"Address Line 1"}
-                    onChangeText={text => {
-                      setTxtAddressLine1(text);
-                      if (text.trim() === '') {
-                        setTxtAddressLine1Error('Addressline1 is required');
-                      } else {
-                        setTxtAddressLine1Error('');
-                      }
-                    }}
-                  />
-                  {txtAddressLine1Error !== '' && <Text style={styles.errorStyle}>{txtAddressLine1Error}</Text>}
-
-
-                  <TextInputs
-                    value={txtAddressLine2}
-                    title={"Address Line 2 (Optional)"}
-                    placeHolder={"Address Line 2 (Optional)"}
-                    onChangeText={text => {
-                      setTxtAddressLine2(text);
-                    }}
-                  />
-                  <TextInputs
-                    value={txtLandmark}
-                    title={"Landmark (Optional)"}
-                    placeHolder={"Landmark (Optional)"}
-                    onChangeText={text => {
-                      setTxtLandmark(text);
-                    }}
-                  />
-                  <TextInputs
-                    value={txtPincode}
-                    title={"Pincode"}
-                    placeHolder={"Pincode"}
-                    onChangeText={text => {
-                      setTxtPincode(text);
-                      if (text.trim() === '') {
-                        setTxtPincodeError('Pincode is required');
-                      } else {
-                        setTxtPincodeError('');
-                      }
-                    }}
-
-                    keyboardType={'number-pad'}
-                    onBlur={() => {
-                      validatePincondeNumber();
-                    }}
-                    onSubmitEditing={() => validatePincondeNumber()}
-                  />
-                  {txtPincodeError !== '' && <Text style={styles.errorStyle}>{txtPincodeError}</Text>}
-
-
-                  <View style={[
-                    external.fd_row,
-                    external.ai_center,
-                    external.js_center,]}>
-                    <View style={{ width: '47%', marginHorizontal: 10 }}>
-                      <TextInputs
-                        value={txtCity}
-                        title={"CityTown"}
-                        placeHolder={"CityTown"}
-                        onChangeText={text => {
-                          setTxtCity(text);
-                          if (text.trim() === '') {
-                            setTxtCityError('City is required');
-                          } else {
-                            setTxtCityError('');
-                          }
-                        }}
-                        onSubmitEditing={() => Keyboard.dismiss()}
-                      />
-                    </View>
-                    <View style={{ width: '47%', marginHorizontal: 10 }}>
-                      <DropdownSectionState
-                        title={
-                          dropdownStateValue !== null && dropdownStateValue !== undefined
-                            ? indianStatesData[dropdownStateValue]
-                            : "Select State"
-                        } options={indianStatesData}
-                        selected={dropdownStateValue}
-                        onSelect={setdropdownStateValue} />
-                    </View>
-                  </View>
-
-                  {txtCityError !== '' && <Text style={styles.errorStyle}>{txtCityError}</Text>}
-
-
-                  {selectedBuyingCompany1 && <View style={[
-                    external.fd_row,
-                    external.ai_center,
-                    external.js_center,]}>
-                    <View style={{ width: '47%', marginHorizontal: 10 }}>
-
-                      <TextInputs
-                        value={txtCompanyName}
-                        title={"Your Company name"}
-                        placeHolder={"Your Company name"}
-                        onChangeText={text => {
-                          setTxtCompanyName(text);
-                          if (text.trim() === '') {
-                            setTxtCompanyNameError('Your Company name is required');
-                          } else {
-                            setTxtCompanyNameError('');
-                          }
-                        }}
-                      />
-
-                    </View>
-                    <View style={{ width: '47%', marginHorizontal: 10 }}>
-
-                      <TextInputs
-                        value={txtGstNumber}
-                        title={"GST Number (Optional)"}
-                        placeHolder={"GST Number (Optional)"}
-                        onChangeText={text => {
-                          setTxtGstNumber(text);
-                        }}
-                      />
-                    </View>
-                  </View>}
-                  {txtCompanyNameError !== '' && <Text style={styles.errorStyle}>{txtCompanyNameError}</Text>}
-                  <View style={[styles.defaulText, { flexDirection: viewRTLStyle }]}>
-                    <CheckBox
-                      onPress={setSelectedDelAsBil1}
-                      checked={selectedDeliveryAsB1}
-                    />
-                    <Text
-                      style={[
-                        styles.defaulTextView,
-                        { color: textColorStyle },
-                        { textAlign: textRTLStyle },
-                      ]}>
-                      Use my Billing Address as my Delivery Address
-                    </Text>
-                  </View>
-
-                  <View style={[styles.defaulText, { flexDirection: viewRTLStyle }]}>
-                    <CheckBox
-                      onPress={handleSetSelectedBuyingCompany1}
-                      checked={selectedBuyingCompany1}
-                    />
-                    <Text
-                      style={[
-                        styles.defaulTextView,
-                        { color: textColorStyle },
-                        { textAlign: textRTLStyle },
-                      ]}>
-                      I am buying for a company
-                    </Text>
-                  </View>
-
-                </ScrollView>
-              </View>
-              <View
-                style={[
-                  external.fd_row,
-                  external.ai_center,
-                  external.js_center,
-                  external.mt_10,
-                ]}>
-                <View style={{ width: SCREEN_WIDTH - windowHeight(40) }}>
-                  <NavigationButton
-                    backgroundColor={appColors.primary}
-                    title={'Use This Address'}
-                    color={appColors.screenBg}
-                    onPress={() => handleAddNewAddress()}
-                  />
-                </View>
-              </View>
-
-            </View>
-          }
-        />
-
-        {activeTab === "Addressess" && <View style={[external.ph_13, external.pv_10]}>
-          <NavigationButton backgroundColor={appColors.primary} title={"Add Address"} color={appColors.textColorWhite} onPress={() => setaddAddressModal(true)} />
-
-        </View>}
-      </View>
     );
 
   if (!isLoaderLoading && !userResponse)

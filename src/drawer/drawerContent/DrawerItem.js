@@ -1,21 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, SectionList, TouchableOpacity, Image } from 'react-native';
 import { external } from '../../style/external.css';
 import { commonStyles } from '../../style/commonStyle.css';
 import { ChevronForward } from '../../utils/icon';
 import IMAGE_CONFIG from '../../config/imageConfig';
+import appColors from '../../themes/appColors';
 
 const DrawerCategoryContent = ({ content, onItemPress }) => {
+
+	const [activeContent, setActiveContent] = useState(null);
 	return (
 		<View style={[external.fx_1]}>
 			<SectionList
 				sections={content}
 				keyExtractor={(item, index) => item + index}
-				renderSectionHeader={({ section: { content, title } }) => (
+				renderSectionHeader={({ section: { content, title } }) => {
+					const isActive = content.FilterCode === activeContent;
+					return (
 
-					<View style={commonStyles.DcontentRow}>
+					<View style={[commonStyles.DcontentRow, { backgroundColor: isActive ? '#00439914' : 'transparent' }]}>
 						<TouchableOpacity
-							onPress={() => onItemPress(content)}
+							onPress={() => {
+								onItemPress(content);
+								setActiveContent(content.FilterCode);
+							}}
 							style={[
 								external.fd_row,
 								external.ai_center,
@@ -31,13 +39,13 @@ const DrawerCategoryContent = ({ content, onItemPress }) => {
 									/>
 									<View style={commonStyles.DIconLayer}></View>
 								</View>
-								<Text style={commonStyles.DTitle}>{title}</Text>
+								<Text style={[commonStyles.DTitle,{color:isActive ? appColors.primary : appColors.textColorBlack, }]}>{title}</Text>
 							</View>
 
-							<ChevronForward />
+							<ChevronForward color={isActive ? appColors.primary : appColors.textColorBlack}/>
 						</TouchableOpacity>
 					</View>
-				)}
+				);}}
 			/>
 		</View>
 	);
